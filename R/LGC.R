@@ -67,7 +67,7 @@ LGC <- function(x, count.family = "Poisson",
       for(i in 1:length(h)){gamX.vec[i] = gamX(h[i], theta2, gamZ, g.vec)}
       Sigma = toeplitz(gamX.vec)
       mean.vec = rep(count.mean(theta1), n)
-      out = -2*dmvnorm(as.numeric(data), mean = mean.vec, sigma = Sigma, log = TRUE)
+      out = -2*mvtnorm::dmvnorm(as.numeric(data), mean = mean.vec, sigma = Sigma, log = TRUE)
       return(out)
     }
   }
