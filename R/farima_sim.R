@@ -15,7 +15,7 @@ farima.sim <- function(Tt,d){
   r[1] <- gamma(1-2*d)/(gamma(1-d)^2)
   r[2:Tt] <- gamma(1-2*d)/gamma(d)/gamma(1-d)*exp(lgamma((1:(Tt-1))+d)-lgamma((1:(Tt-1))-d+1))
   r[(Tt+1):(2*Tt-2)] <- rev(r[2:(Tt-1)])
-  # embedding
+  # James's embedding
   L <- Re(fft(r))
   wr <- rnorm(2*Tt-2,0,1)
   wi <- rnorm(2*Tt-2,0,1)
