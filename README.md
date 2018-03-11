@@ -21,6 +21,11 @@ As the package is not yet on CRAN, it needs to be installed from GitHub:
 	- FARIMA(0,d,0)
 - Estimate model parameters with Gaussian likelihood of a particle filtering MLE.
 
+### Example
+
+    LGC(x, count.family = "Poisson",
+           gauss.series = "AR", p=1,
+           estim.method = "gaussianLik")
 
 ### Authors
 
