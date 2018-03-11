@@ -7,11 +7,13 @@ sim_pois_ar1 = function(n, phi, lam){
   return(x)
 }
 
-x=sim_pois_ar1(500,0.7,2)
-LGC(x,p=1)
+x=sim_pois_ar1(200,0.7,2)
+LGC(x,p=1,estim.method = "gaussianLik")
+LGC(x,p=1,estim.method = "particlesSIS")
+
 
 v = replicate(n = 20, expr = {
-  x = sim_pois_ar1(500, .7, 2)
+  x = sim_pois_ar1(200, .7, 2)
   LGC(x, p=1)$par
 })
 

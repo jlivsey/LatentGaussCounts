@@ -1,14 +1,17 @@
 LGC <- function(x, count.family = "Poisson",
                    gauss.series = "AR",
-                   estim.method = "gaussianLik",
+                   estim.method = c("gaussianLik","particlesSIS"),
                    max.terms = 30, p=NULL, d=NULL, q=NULL, n.mix=NULL, ...)
 {
   # DEFINE a cdf function from count.family input. Make sure it accepts a vector
   #        valued input.
    if(count.family=="Poisson"){
      cdf = function(x, lam){ ppois(q=x, lambda=lam) }
+     pdf = function(x, lam){ dpois(x, lambda=lam) }
      count.mean = function(lam){ lam }
      count.initial = function(data){ mean(data) }
+     theta1.min = 0.01
+     theta1.max = mean(x) + 5
      theta1.idx = 1
    }  else if(count.family=="mixed-Poisson"){
     if(is.null(n.mix)) stop("you must specify the number of Poissons to mix,
@@ -18,12 +21,17 @@ LGC <- function(x, count.family = "Poisson",
        cdf = function(x, theta){
          theta[1]*ppois(x, theta[2]) + (1-theta[1])*ppois(x, theta[3])
        }
+       pdf = function(x, theta){
+         theta[1]*dpois(x, theta[2]) + (1-theta[1])*dpois(x, theta[3])
+       }
        count.mean = function(theta){
 
        }
        count.initial = function(data){
 
        }
+       theta1.min = c(0,0.01,0.01)
+       theta1.max = c(0.5,10,10)
        theta1.idx = 1:(n.mix+1)
     }
     if(n.mix>2) stop("mixed-Poisson is not currently coded for n.mix>2")
@@ -72,9 +80,71 @@ LGC <- function(x, count.family = "Poisson",
     }
   }
 
-  initial.param = c(count.initial(x), gauss.initial(x))
-  cat("initial parameter estimates: ", initial.param, "\n")
-  optim.output <- optim(par = initial.param, fn = lik, data=x, ...)
+  if ((gauss.series=="AR") & (estim.method=="particlesSIS")){
+    if(is.null(p)) stop("you must specify the AR order, p, to use gauss.series=AR")
+    if(p>1) stop("the ACVF is not coded for AR models of order higher than 1 currently")
+    if(p==1){
+      set.seed(1)
+      z.rest = function(a,b) #Generates N(0,1) variables restricted to (ai,bi),i=1,...n
+      {qnorm(runif(length(a),0,1)*(pnorm(b,0,1)-pnorm(a,0,1))+pnorm(a,0,1),0,1)}
+      likSIS = function(theta, data){
+        theta1 = theta[theta1.idx]
+        theta2.idx = (theta1.idx+1):(theta1.idx+1)
+        phi = theta[theta2.idx]
+        xt = data
+        T1 = length(xt)
+        N = 1000 # number of particles
+        prt = matrix(0,N,T1) # to collect all particles
+        wgh = matrix(0,N,T1) # to collect all particle weights
+
+        a = qnorm(cdf(xt[1]-1,theta1),0,1)
+        b = qnorm(cdf(xt[1],theta1),0,1)
+        a = rep(a,N)
+        b = rep(b,N)
+        zprev = z.rest(a,b)
+        zhat = phi*zprev
+        prt[,1] = zhat
+
+        wprev = rep(1,N)
+        wgh[,1] = wprev
+
+        for (t in 2:T1)
+        {
+          rt = sqrt(1-phi^2)
+          a = (qnorm(cdf(xt[t]-1,theta1),0,1) - phi*zprev)/rt
+          b = (qnorm(cdf(xt[t],theta1),0,1) - phi*zprev)/rt
+          err = z.rest(a,b)
+          znew = phi*zprev + rt*err
+          zhat = phi*znew
+          prt[,t] = zhat
+          zprev = znew
+
+          wgh[,t] = wprev*(pnorm(b,0,1) - pnorm(a,0,1))
+          wprev = wgh[,t]
+        }
+
+        lik = pdf(xt[1],theta1)*mean(wgh[,T1])
+        nloglik = (-2)*log(lik)
+
+        out = if (is.na(nloglik)) Inf else nloglik
+        return(out)
+      }
+
+
+    }else{ stop("the p specified is not valid") }
+  }
+
+  if(estim.method=="gaussianLik"){
+    initial.param = c(count.initial(x), gauss.initial(x))
+    cat("initial parameter estimates: ", initial.param, "\n")
+    optim.output <- optim(par = initial.param, fn = lik, data=x, ...)
+  }
+
+  if((gauss.series=="AR") & (estim.method=="particlesSIS")){
+    R0 <- DEoptim::DEoptim(likSIS, lower = c(theta1.min,-.99), upper = c(theta1.max,.99),control = DEoptim::DEoptim.control(trace = 10, itermax = 100, steptol = 50, reltol = 1e-5), data=x)
+    optim.output <- as.vector(R0$optim$bestmem)
+  }
+
 
   return(optim.output)
 }
