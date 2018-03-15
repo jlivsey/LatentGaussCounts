@@ -1,0 +1,74 @@
+Here is a prototype call to our possible function LCG() "Latent Gaussian Counts":
+
+LGC(x=data,
+    count.family = "Poisson", "mixed-Poisson", "binomial",
+    gauss.series = "AR", "farima"
+    estim.method = "gaussianLik, particleMLE",
+    max.terms = 30, [30 has proven to be enough. \infty\approx 30]
+    p=NULL, d=NULL, q=NULL, n.mix=NULL)     these are the additional model params
+                                            that might be needed for a specific
+                                            count.family or gauss.series. We will
+                                            check for them when needed using the
+                                            is.null() function.
+-------------------------------------------------------------------------------
+
+The argument count.family gives the desired marginal distribution for the
+count series. It is a discrete distribution.
+
+The argument gauss.series gives the type of latent gaussian process that will
+be used.
+
+estimate.method gives the estimation method used
+
+-------------------------------------------------------------------------------
+
+We have to decide how to pass the parameter vector around.
+
+For example if we choose "mixed-Poisson", "AR1", n.mixed=2 then we would have
+theta = (lam1, lam2, phi)
+
+If we choose "Poisson", "farima", p=1, d=1, q=0 then we would have
+theta = (lam, phi, d)
+
+Notice the placement changes. In the former the first two parameters govern the
+count distribution. In the later only the first parameter governs the count.
+
+My initial thought is to have a parameter vector theta and an index pointer that
+tells how many variables are in the count.family, say cfi. So when we call the hermite.coeff
+function, which only needs the count.family params, we have:
+hermite.coef(theta[1:cfi])
+Then when we call the ACVF of X, gamX(theta[cfi+1, length(theta)])
+
+-------------------------------------------------------------------------------
+
+For each count.family we need to define the CDF (to get hermite coefs)
+
+For example:
+
+if(count.family = "mixed-poisson", n.mixed=2)
+ if(is.null(n.mixed)) stop("you number specify the number of Poissons to mix, n.mixed
+                            when using the count.family=mixed.Poisson option")
+ IMPORTANT - pass paramters as a vector. Then we remain consistant with this structure.
+ cdf = function(x, theta){
+    theta[1]*ppois(x,theta[2]) + (1-theta[1])*ppois(x,theta[3])
+ }
+
+if(count.family=="Poisson")
+  cdf = function(x, lam=lam){ dpois(x, lambda=lam) }
+
+if(count.family="Binomial")
+ if(is.null(n)) stop("you must specify the number of trials, n, to use count.family=Binomial")
+ cdf = function(p, n=n){ dbinom(p, n=n) }
+
+-------------------------------------------------------------------------------
+
+For each gauss.series we need to define the ACVF function.
+
+For example,
+
+if(gauss.series="AR", p=1)
+  if(is.null(p)) stop("you must specify the AR order, p, to use gauss.series=AR")
+  if(p>1) stop("the ACVF is not coded for AR models of order higher than 1 currently")
+  gamz = function(h, theta){
+    theta^h / (1-theta^2)
+  }

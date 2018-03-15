@@ -45,7 +45,7 @@ pois.farima <- function(Tt,d,lam){
 
 Q <- function(x){ qpois(x, lambda = 2) } # F^(-1)
 
-Polys <- hermite.he.polynomials(100)
+Polys <- hermite.he.polynomials(100) # polys[[k]] = H_{k-1}
 
 # ---- g() from equation (23) on 1-31-18 ----
 g <- function(lam, k, polys=Polys){
