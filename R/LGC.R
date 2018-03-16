@@ -99,19 +99,20 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson"),
     if(p>1) stop("the ACVF is not coded for AR models of order higher than 1
                  currently")
     if(p==1){
-      set.seed(1)
+      #set.seed(1)
       z.rest = function(a,b){
         # Generates N(0,1) variables restricted to (ai,bi),i=1,...n
         qnorm(runif(length(a),0,1)*(pnorm(b,0,1)-pnorm(a,0,1))+pnorm(a,0,1),0,1)
       }
       likSIS = function(theta, data){
+        set.seed(1)
         theta1 = theta[theta1.idx]
         n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
         theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 1)
                 phi = theta[theta2.idx]
         xt = data
         T1 = length(xt)
-        N = 1000 # number of particles
+        N = 5000 # number of particles
         prt = matrix(0,N,T1) # to collect all particles
         wgh = matrix(0,N,T1) # to collect all particle weights
 

@@ -6,7 +6,8 @@ sim_mixedpois_ar1 = function(n, phi, p, lam1, lam2){
 }
 
 
-x = sim_mixedpois_ar1(200, .7, .5, 1, 15)
+x = sim_mixedpois_ar1(400, .7, .5, 1, 15)
+
 LGC(x,
     count.family = "mixed-Poisson", n.mix=2,
     gauss.series = "AR", p=1,
@@ -18,3 +19,5 @@ LGC(x,
     gauss.series = "AR", p=1,
     estim.method = "particlesSIS",
     print.progress = TRUE)
+
+
