@@ -1,6 +1,0 @@
-- I think we have a logical issue. Particle MLE needs both gauss.series = "AR"
-  and estim.method = "particlesSIS" so it should come above the gaussian lik'd
-  in the logical flow. Not sure the best way to handle this. We should discuss.
-
-- Gaussian lik'd has seperability of the gauss.series and the count.family. How
-  best to rectify this with particleSIS which needs both.
