@@ -1,5 +1,5 @@
 LGC <- function(x, count.family = c("Poisson", "mixed-Poisson"),
-                   gauss.series = "AR",
+                   gauss.series = c("AR","FARIMA"),
                    estim.method = c("gaussianLik","particlesSIS"),
                    max.terms = 30, p=NULL, d=NULL, q=NULL, n.mix=NULL,
                    print.progress=FALSE, ...)
@@ -62,6 +62,11 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson"),
       theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 2)
     }
     # else{ stop("the p specified is not valid") }
+  }
+
+  if(gauss.series=="FARIMA"){ # currently only FARIMA(0,d,0)
+      n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
+      theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 1)
   }
 
   # ----------------------------------------------------------------------------
@@ -230,6 +235,65 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson"),
     else{ stop("the p specified is not valid") }
   }
 
+  if ((gauss.series=="FARIMA") & (estim.method=="particlesSIS")){
+    #set.seed(1)
+    z.rest = function(a,b){
+      # Generates N(0,1) variables restricted to (ai,bi),i=1,...n
+      qnorm(runif(length(a),0,1)*(pnorm(b,0,1)-pnorm(a,0,1))+pnorm(a,0,1),0,1)
+    }
+    likSIS = function(theta, data){
+      #set.seed(1)
+      theta1 = theta[theta1.idx]
+      n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
+      theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 1)
+      d = theta[theta2.idx]
+      xt = data
+      N = 1000 # number of particles
+
+      T1 = length(xt)
+      prt = matrix(0,N,T1) # to collect all particles
+      wgh = matrix(0,N,T1) # to collect all particle weights
+
+      a = qnorm(cdf(xt[1]-1,theta1),0,1)
+      b = qnorm(cdf(xt[1],theta1),0,1)
+      a = rep(a,N)
+      b = rep(b,N)
+      zprev = z.rest(a,b)
+      phi1 = -(gamma(2)/gamma(2-d))*(gamma(1-d)/gamma(2))*(gamma(1-d)/gamma(1))*(if (d==0) {0} else {1/gamma(-d)})
+      zhat = phi1*rev(zprev)
+      prt[,1] = zhat
+
+      wprev = rep(1,N)
+      wgh[,1] = wprev
+
+      rt = 1
+
+      for (t in 2:T1)
+      {
+        rt = rt*sqrt(1-(d/(t-1-d))^2)
+        a = (qnorm(cdf(xt[t]-1,theta1),0,1) - zhat)/rt
+        b = (qnorm(cdf(xt[t],theta1),0,1) - zhat)/rt
+        err = z.rest(a,b)
+        znew = zhat + rt*err
+        zprev = cbind(zprev,znew)
+
+        phit = -exp(lgamma(t+1)-lgamma(t-d+1))*exp(lgamma((1:t)-d)-lgamma((1:t)+1))*exp(lgamma(t-d-(1:t)+1)-lgamma(t-(1:t)+1))*(if (d==0) {0} else {1/gamma(-d)})
+        zhat = rowSums(phit*zprev[,ncol(zprev):1])
+        prt[,t] = zhat
+
+        wgh[,t] = wprev*(pnorm(b,0,1) - pnorm(a,0,1))
+        wprev = wgh[,t]
+      }
+
+      lik <- dpois(xt[1],theta1)*mean(wgh[,T1])
+      # lik = dpois(xt[1],theta1)*mean(wgh[,T1],na.rm = TRUE)
+      nloglik = (-2)*log(lik)
+
+      out = if (is.na(nloglik)) Inf else nloglik
+      return(out)
+    }
+  }
+
   if(estim.method=="gaussianLik"){
     initial.param = c(count.initial(x), gauss.initial(x))
     cat("initial parameter estimates: ", initial.param, "\n")
@@ -247,6 +311,10 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson"),
     }
   }
 
+  if((gauss.series=="FARIMA") & (estim.method=="particlesSIS")){
+      R0 <- DEoptim::DEoptim(likSIS, lower = c(theta1.min,-.49), upper = c(theta1.max,.49),control = DEoptim::DEoptim.control(trace = 10, itermax = 100, steptol = 50, reltol = 1e-5), data=x)
+      optim.output <- as.vector(R0$optim$bestmem)
+  }
 
   return(optim.output)
 }
