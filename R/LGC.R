@@ -1,7 +1,7 @@
 LGC <- function(x, count.family = c("Poisson", "mixed-Poisson"),
                    gauss.series = c("AR","FARIMA"),
                    estim.method = c("gaussianLik","particlesSIS"),
-                   max.terms = 30, p=NULL, d=NULL, q=NULL, n.mix=NULL,
+                   max.terms = 30, p=NULL, d=NULL, q=NULL, n.mix=NULL, n=NULL,
                    print.progress=FALSE, ...)
 {
   # DEFINE a cdf function from count.family input. Make sure it accepts a vector
@@ -42,26 +42,39 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson"),
     }
     if(n.mix>2) stop("mixed-Poisson is not currently coded for n.mix>2")
 
-  }else{ stop("please specify a valid count.family") }
+   } else if(count.family=="Binomial"){
+     if(is.null(n)) stop("you must specify the number of trials,
+                             n, to use count.family=Binomial")
+     cdf = function(x, theta){ pbinom(q = x, size = n, prob = theta) }
+     pdf = function(x, theta){ dbinom(x = x, size = n, prob = theta) }
+     count.mean = function(theta){ n*theta }
+     count.initial = function(data){ mean(data)/n }
+     theta1.idx = 1
+   } else{ stop("please specify a valid count.family") }
 
   # DEFINE a gamz function from gauss.series input. Make sure it accepts a
   #        vector valued input.
   if(gauss.series=="AR"){
     if(is.null(p)) stop("you must specify the AR order, p, to use
                         gauss.series=AR")
-    if(p>2) stop("the ACVF is not coded for AR models of order higher than 1
+    if(p>3) stop("the ACVF is not coded for AR models of order higher than 1
                  currently")
     if(p==1){
       gamZ = function(h, phi){ phi^h / (1-phi^2) }
       gauss.initial = function(x){ acf(x, plot = FALSE)$acf[2] }
       n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
       theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 1)
-    }
-    if(p==2){
+    } else if(p==2){
+      gamZ = function(h, phi){ ARMAacf(ar = phi, lag.max = 1000)[h+1] }
+      gauss.initial = function(data){ acf(data, plot = FALSE)$acf[2:3] }
       n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
       theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 2)
-    }
-    # else{ stop("the p specified is not valid") }
+    } else if(p==3){
+      gamZ = function(h, phi){ ARMAacf(ar = phi, lag.max = 1000)[h+1] }
+      gauss.initial = function(data){ acf(data, plot = FALSE)$acf[2:4] }
+      n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
+      theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 3)
+    } else{ stop("the p specified is not valid") }
   }
 
   if(gauss.series=="FARIMA"){ # currently only FARIMA(0,d,0)

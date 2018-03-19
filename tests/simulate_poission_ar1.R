@@ -37,6 +37,11 @@ c(phi1,phi2)
 x=sim_pois_ar1(200,c(phi1,phi2),2)
 plot.ts(x)
 acf(x,lag.max = 20)
+pacf(x, lag.max=20)
+
+LGC(x, count.family = "Poisson",
+    gauss.series = "AR", p=2,
+    estim.method = "gaussianLik", print.progress = TRUE)
 
 LGC(x, count.family = "Poisson",
     gauss.series = "AR", p=2,
