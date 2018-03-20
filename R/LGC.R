@@ -78,8 +78,10 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson"),
   }
 
   if(gauss.series=="FARIMA"){ # currently only FARIMA(0,d,0)
-      n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
-      theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 1)
+    gamZ = function(h, d){ acf.farima0d0(d = d, h = h) }
+    gauss.initial = function(data){ 1/4 }
+    n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
+    theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 1)
   }
 
   # ----------------------------------------------------------------------------
