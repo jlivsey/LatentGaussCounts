@@ -60,7 +60,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson"),
     if(p>3) stop("the ACVF is not coded for AR models of order higher than 1
                  currently")
     if(p==1){
-      gamZ = function(h, phi){ phi^h / (1-phi^2) }
+      gamZ = function(h, phi){ phi^h}
       gauss.initial = function(x){ acf(x, plot = FALSE)$acf[2] }
       n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
       theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 1)
