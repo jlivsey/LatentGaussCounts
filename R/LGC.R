@@ -333,7 +333,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson"),
 
   if(estim.method=="gaussianLik"){
     initial.param = c(count.initial(x), gauss.initial(x))
-    cat("initial parameter estimates: ", initial.param, "\n")
+    # cat("initial parameter estimates: ", initial.param, "\n")
     optim.output <- optim(par = initial.param, fn = lik, data=x, ...)
   }
 
