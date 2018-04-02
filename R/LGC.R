@@ -1,3 +1,25 @@
+#' Latent Gaussian Count model builder
+#'
+#' Main execution function for latentGaussCounts package.
+#'
+#' @param x data
+#' @param count.family desired marginal distribution (Poisson, mixed-Poisson, ...)
+#' @param gauss.series desired structure of your latent Gaussian process
+#' @param estim.method method used for estimating parameters
+#' @param max.terms maximum number of terms used to truncate Hermite expansions
+#' @param p AR order
+#' @param d don't use it
+#' @param q don't use it
+#' @param n.mix number of Poisson distributions in mixed-Poisson count.family
+#' @param n Not sure what this is
+#' @param print.progress Should progress be printed as optim() is run
+#' @param ... additional parameters to pass to optim
+#'
+#' @return list object which are results from optim() run
+#'
+#' @export
+
+
 LGC <- function(x, count.family = c("Poisson", "mixed-Poisson"),
                    gauss.series = c("AR","FARIMA"),
                    estim.method = c("gaussianLik","particlesSIS"),
