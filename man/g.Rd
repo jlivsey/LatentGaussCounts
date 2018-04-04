@@ -2,7 +2,7 @@
 % Please edit documentation in R/g.R
 \name{g}
 \alias{g}
-\title{g() function from latentGaussCounts paper. Equation (23) from draft 
+\title{g() function from latentGaussCounts paper. Equation (23) from draft
 dated 1-28-18}
 \usage{
 g(lam, k, polys = Polys)
@@ -13,13 +13,13 @@ g(lam, k, polys = Polys)
 \item{k}{function input parameter}
 
 \item{polys}{list object containing the hermite polynomials. By default the
-orthopolynorm package is used and preloaded Polys.Rdata is loaded with the 
+orthopolynorm package is used and preloaded Polys.Rdata is loaded with the
 package}
 }
 \value{
 function value
 }
 \description{
-g() function from latentGaussCounts paper. Equation (23) from draft 
+g() function from latentGaussCounts paper. Equation (23) from draft
 dated 1-28-18
 }

@@ -1,4 +1,4 @@
-#  Autocovariance function (ACVF) of FARIMA(0,d,0)
+#' Autocovariance function (ACVF) of FARIMA(0,d,0)
 #'
 #' @param d fractional differencing parameter
 #' @param h lag to calculate ACVF at

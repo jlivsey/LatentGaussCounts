@@ -1,4 +1,3 @@
-
 # ---- g() from equation (23) on 1-31-18 ----
 
 
@@ -12,8 +11,8 @@
 #' package
 #'
 #' @return function value
+#' @export
 #'
-
 
 
 g <- function(lam, k, polys=Polys){
@@ -23,3 +22,4 @@ g <- function(lam, k, polys=Polys){
     her(qnorm(ppois(0:N, lam, lower.tail = TRUE)))
   return(list(val=sum(terms)/sqrt(2*pi)/factorial(k), terms=terms))
 }
+# ----
