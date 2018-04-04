@@ -53,6 +53,17 @@ pmixpois = function(x, p, lam1, lam2){
   return(y)
 }
 
+#' Inverse CDF/Quantile function for mixed-Poisson distribution
+#'
+#' @param y evaluation point (or vector)
+#' @param p mixing probability
+#' @param lam1 mean of first component
+#' @param lam2 mean of second component
+#'
+#' @return quantile function at y with specified parameters
+#' @export
+#'
+
 qmixpois = function(y, p, lam1, lam2){
   yl = length(y)
   x = rep(0,yl)
