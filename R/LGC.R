@@ -26,6 +26,9 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson"),
                    max.terms = 30, p=NULL, d=NULL, q=NULL, n.mix=NULL, n=NULL,
                    print.progress=FALSE, ...)
 {
+
+  # ---- count.family input ---------------------------------------------------
+
   # DEFINE a cdf function from count.family input. Make sure it accepts a vector
   #        valued input.
    if(count.family=="Poisson"){
@@ -74,6 +77,9 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson"),
      theta1.idx = 1
    } else{ stop("please specify a valid count.family") }
 
+
+  # ---- Gauss.series input ---------------------------------------------------
+
   # DEFINE a gamz function from gauss.series input. Make sure it accepts a
   #        vector valued input.
   if(gauss.series=="AR"){
@@ -106,7 +112,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson"),
     theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 1)
   }
 
-  # ----------------------------------------------------------------------------
+# ---- Estimation Methods -----------------------------------------------------
 
   if(estim.method=="gaussianLik"){
     g <- function(k, theta1, polys=Polys){
@@ -331,10 +337,15 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson"),
     }
   }
 
+  # ---- Optimization ---------------------------------------------------------
+
   if(estim.method=="gaussianLik"){
     initial.param = c(count.initial(x), gauss.initial(x))
-    # cat("initial parameter estimates: ", initial.param, "\n")
-    optim.output <- optim(par = initial.param, fn = lik, data=x, ...)
+    if(print.progress) cat("initial parameter estimates: ", initial.param, "\n")
+    optim.output <- optim(par = initial.param, fn = lik,
+                          data=x, hessian=TRUE, ...)
+    stder <- sqrt(diag(solve(optim.output$hessian))) # calculate standard error
+    optim.output[[length(optim.output)+1]] = stder # append stder to output
   }
 
   if((gauss.series=="AR") & (estim.method=="particlesSIS")){
