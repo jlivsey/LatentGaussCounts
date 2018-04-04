@@ -13,6 +13,7 @@
 #' @param n.mix number of Poisson distributions in mixed-Poisson count.family
 #' @param n Not sure what this is
 #' @param print.progress Should progress be printed as optim() is run
+#' @param print.initial.estimates Should initial estiamtes be printed
 #' @param ... additional parameters to pass to optim
 #'
 #' @return list object which are results from optim() run
@@ -24,7 +25,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson"),
                    gauss.series = c("AR","FARIMA"),
                    estim.method = c("gaussianLik","particlesSIS"),
                    max.terms = 30, p=NULL, d=NULL, q=NULL, n.mix=NULL, n=NULL,
-                   print.progress=FALSE, ...)
+                   print.progress=FALSE, print.initial.estimates=FALSE, ...)
 {
 
   # ---- count.family input ---------------------------------------------------
@@ -341,11 +342,11 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson"),
 
   if(estim.method=="gaussianLik"){
     initial.param = c(count.initial(x), gauss.initial(x))
-    if(print.progress) cat("initial parameter estimates: ", initial.param, "\n")
+    if(print.initial.estimates) cat("initial parameter estimates: ", initial.param, "\n")
     optim.output <- optim(par = initial.param, fn = lik,
                           data=x, hessian=TRUE, ...)
     stder <- sqrt(diag(solve(optim.output$hessian))) # calculate standard error
-    optim.output[[length(optim.output)+1]] = stder # append stder to output
+    optim.output = append(optim.output, list(stder=stder)) # append stder output
   }
 
   if((gauss.series=="AR") & (estim.method=="particlesSIS")){

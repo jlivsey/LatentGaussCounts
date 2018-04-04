@@ -7,7 +7,7 @@
 LGC(x, count.family = c("Poisson", "mixed-Poisson"), gauss.series = c("AR",
   "FARIMA"), estim.method = c("gaussianLik", "particlesSIS"),
   max.terms = 30, p = NULL, d = NULL, q = NULL, n.mix = NULL,
-  n = NULL, print.progress = FALSE, ...)
+  n = NULL, print.progress = FALSE, print.initial.estimates = FALSE, ...)
 }
 \arguments{
 \item{x}{data}
@@ -31,6 +31,8 @@ LGC(x, count.family = c("Poisson", "mixed-Poisson"), gauss.series = c("AR",
 \item{n}{Not sure what this is}
 
 \item{print.progress}{Should progress be printed as optim() is run}
+
+\item{print.initial.estimates}{Should initial estiamtes be printed}
 
 \item{...}{additional parameters to pass to optim}
 }
