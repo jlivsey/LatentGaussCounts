@@ -116,10 +116,12 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson"),
 # ---- Estimation Methods -----------------------------------------------------
 
   if(estim.method=="gaussianLik"){
-    g <- function(k, theta1, polys=Polys){
-      her <- as.function(polys[[k]]) # polys[[k]] = H_{k-1}
+    g <- function(k, theta1){
+      #her <- as.function(Polys[[k]]) # polys[[k]] = H_{k-1}
       N = which(round(cdf(1:100, theta1), 7) == 1)[1]
-      terms = exp(-qnorm(cdf(0:N, theta1))^2/2) *  her(qnorm(cdf(0:N, theta1)))
+      terms = exp(-qnorm(cdf(0:N, theta1))^2/2) *
+              Hermite_poly(k = k, x = qnorm(cdf(0:N, theta1)))
+             #her(qnorm(cdf(0:N, theta1)))
       return(sum(terms)/sqrt(2*pi)/factorial(k))
     }
 
