@@ -1,8 +1,8 @@
-n.seq    = c(100, 400)
+n.seq    = c(300)
 phi.seq  = c(.75)
-p.seq    = 1/2
+p.seq    = 1/4
 lam1.seq = 2
-lam2.seq = c(3, 5, 10)
+lam2.seq = c(3, 10)
 Nsim = 10
 total.iter = Nsim * length(n.seq) * length(phi.seq) *
              length(lam1.seq) * length(lam2.seq) * length(p.seq)
@@ -33,25 +33,24 @@ for(dumb.variable in 1:Nsim){
                      count.family = "mixed-Poisson", n.mix=2,
                      gauss.series = "AR", p=1,
                      estim.method = "gaussianLik")
-  simResults.mixedpoisAR1$estim.method = "gaussianLik"
-  simResults.mixedpoisAR1$n         = n
-  simResults.mixedpoisAR1$p.true    = p
-  simResults.mixedpoisAR1$p.est     = optim.output$par[1]
-  simResults.mixedpoisAR1$p.se      = optim.output$se[1]
-  simResults.mixedpoisAR1$lam1.true = lam1
-  simResults.mixedpoisAR1$lam1.est  = optim.output$par[2]
-  simResults.mixedpoisAR1$lam1.se   = optim.output$se[2]
-  simResults.mixedpoisAR1$lam2.true = lam2
-  simResults.mixedpoisAR1$lam2.est  = optim.output$par[3]
-  simResults.mixedpoisAR1$lam2.se   = optim.output$se[3]
-  simResults.mixedpoisAR1$phi.true  = phi
-  simResults.mixedpoisAR1$phi.est   = optim.output$par[4]
-  simResults.mixedpoisAR1$phi.se    = optim.output$se[4]
+  simResults.mixedpoisAR1$estim.method[idx] = "gaussianLik"
+  simResults.mixedpoisAR1$n[idx]         = n
+  simResults.mixedpoisAR1$p.true[idx]    = p
+  simResults.mixedpoisAR1$p.est[idx]     = optim.output$par[1]
+  simResults.mixedpoisAR1$p.se[idx]      = optim.output$stder[1]
+  simResults.mixedpoisAR1$lam1.true[idx] = lam1
+  simResults.mixedpoisAR1$lam1.est[idx]  = optim.output$par[2]
+  simResults.mixedpoisAR1$lam1.se[idx]   = optim.output$stder[2]
+  simResults.mixedpoisAR1$lam2.true[idx] = lam2
+  simResults.mixedpoisAR1$lam2.est[idx]  = optim.output$par[3]
+  simResults.mixedpoisAR1$lam2.se[idx]   = optim.output$stder[3]
+  simResults.mixedpoisAR1$phi.true[idx]  = phi
+  simResults.mixedpoisAR1$phi.est[idx]   = optim.output$par[4]
+  simResults.mixedpoisAR1$phi.se[idx]    = optim.output$stder[4]
   idx = idx + 1
   setTxtProgressBar(pb,idx)
 }}}}}}
 close(pb)
-
 
 
 # ---- Windows parallel -------------------------------------------------------

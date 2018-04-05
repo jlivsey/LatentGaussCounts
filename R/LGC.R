@@ -63,7 +63,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson"),
          return(c(p.hat, theta1.hat, theta2.hat))
        }
        theta1.min = c(0,0.01,0.01)
-       theta1.max = c(0.5,10,10)
+       theta1.max = c(0.5,20,20)
        theta1.idx = 1:(n.mix+1)
     }
     if(n.mix>2) stop("mixed-Poisson is not currently coded for n.mix>2")
@@ -93,6 +93,8 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson"),
       gauss.initial = function(x){ acf(x, plot = FALSE)$acf[2] }
       n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
       theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 1)
+      theta2.min = .01
+      theta2.max = .99
     } else if(p==2){
       gamZ = function(h, phi){ ARMAacf(ar = phi, lag.max = 1000)[h+1] }
       gauss.initial = function(data){ acf(data, plot = FALSE)$acf[2:3] }
@@ -130,6 +132,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson"),
     }
 
     lik = function(theta, data){
+      if(print.progress) cat("theta = ", theta, "\n")
       theta1 = theta[theta1.idx]
       theta2 = theta[theta2.idx]
       n   = length(data)
@@ -142,9 +145,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson"),
       mean.vec = rep(count.mean(theta1), n)
       out = -2*mvtnorm::dmvnorm(as.numeric(data), mean = mean.vec,
                                 sigma = Sigma, log = TRUE)
-      if(print.progress){
-        cat("theta = ", theta, " lik = ", out, "\n")
-      }
+      if(print.progress) cat(" lik = ", out, "\n")
       return(out)
     }
   }
@@ -346,8 +347,12 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson"),
     initial.param = c(count.initial(x), gauss.initial(x))
     if(print.initial.estimates) cat("initial parameter estimates: ", initial.param, "\n")
     optim.output <- optim(par = initial.param, fn = lik,
-                          data=x, hessian=TRUE, ...)
+                          data=x, hessian=TRUE, method = "L-BFGS-B",
+                          lower = c(theta1.min, theta2.min),
+                          upper = c(theta1.max, theta2.max), ...)
+    stder = rep(NA, length(initial.param))
     stder <- sqrt(diag(solve(optim.output$hessian))) # calculate standard error
+    stder[is.nan(stder)] = 0
     optim.output = append(optim.output, list(stder=stder)) # append stder output
   }
 
