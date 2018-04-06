@@ -57,7 +57,9 @@ close(pb)
 library(parallel)
 # load data as list
 l2 <- list()
-for(i in 1:10) l2[[i]] = sim_pois_ar(n = 200, phi = 0.7, lam = 2)
+for(i in 1:500) l2[[i]] = sim_mixedpois_ar1(n = 200, phi = .7, p = .25, lam1 = 2, lam2 = 3)
+for(i in 501:1000) l2[[i]] = sim_mixedpois_ar1(n = 200, phi = .7, p = .25, lam1 = 2, lam2 = 10)
+for(i in 1001:1500) l2[[i]] = sim_mixedpois_ar1(n = 200, phi = .2, p = .25, lam1 = 2, lam2 = 10)
 # set up cluster
 cl <- makeCluster(detectCores())
 # load our package for each node
@@ -68,7 +70,7 @@ clusterExport(cl, varlist = "l2")
 system.time({
 out <- parLapply(cl, l2, function(x){
                                       LGC(x,
-                                          count.family = "Poisson",
+                                          count.family = "mixed-Poisson", n.mix=2,
                                           gauss.series = "AR", p=1,
                                           estim.method = "particlesSIS")
                                     })
@@ -76,17 +78,4 @@ out <- parLapply(cl, l2, function(x){
 # Stop the cluster
 stopCluster(cl)
 
-
-# ---- Linux or OS-X parallel -------------------------------------------------------
-library(parallel)
-# load data as list
-l2 <- list()
-for(i in 1:10) l2[[i]] = sim_pois_ar(n = 200, phi = 0.7, lam = 2)
-# Run LGC() function
-mclapply(l2, function(x){
-                          LGC(x,
-                              count.family = "Poisson",
-                              gauss.series = "AR", p=1,
-                              estim.method = "particlesSIS")
-                        }, mc.cores = detectCores())
 
