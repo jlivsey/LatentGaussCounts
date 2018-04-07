@@ -1,9 +1,9 @@
-n.seq    = c(300)
-phi.seq  = c(.75)
+n.seq    = c(200, 400)
+phi.seq  = c(.25, .75)
 p.seq    = 1/4
 lam1.seq = 2
-lam2.seq = c(3, 10)
-Nsim = 10
+lam2.seq = c(3, 5, 10)
+Nsim = 1000
 total.iter = Nsim * length(n.seq) * length(phi.seq) *
              length(lam1.seq) * length(lam2.seq) * length(p.seq)
 save.cols = c("estim.method", "n",
@@ -77,7 +77,7 @@ out <- parLapply(cl, l2, function(x){
 stopCluster(cl)
 
 
-# ---- Linux or OS-X parallel -------------------------------------------------------
+# ---- Linux or OS-X parallel --------------------------------------------------
 library(parallel)
 # load data as list
 l2 <- list()
