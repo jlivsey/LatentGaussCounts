@@ -205,8 +205,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson"),
         out = if (is.na(nloglik)) Inf else nloglik
         return(out)
       }
-    }
-    if(p==2){
+    } else if(p==2){
       #set.seed(1)
       z.rest = function(a,b){
         # Generates N(0,1) variables restricted to (ai,bi),i=1,...n
@@ -278,8 +277,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson"),
           return(out)
         }
       }
-    }
-    else{ stop("the p specified is not valid") }
+    } else{ stop("the p specified is not valid") }
   }
 
   if ((gauss.series=="FARIMA") & (estim.method=="particlesSIS")){
