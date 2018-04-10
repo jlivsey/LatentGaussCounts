@@ -43,10 +43,14 @@ save(simResults.poisAR1, file = "simResults_poisAR1.Rdata")
 library(parallel)
 # load data as list
 l2 <- list()
-for(i in 1:500)     l2[[i]] = sim_pois_ar(n = 200, phi = 0.7, lam = 2)
-for(i in 501:1000)  l2[[i]] = sim_pois_ar(n = 200, phi = 0.2, lam = 2)
-for(i in 1001:1500) l2[[i]] = sim_pois_ar(n = 200, phi = 0.7, lam = 10)
-for(i in 1501:2000) l2[[i]] = sim_pois_ar(n = 200, phi = -0.7, lam = 2)
+for(i in 1:500)     l2[[i]] = sim_pois_ar(n = 200, phi = 0.7,
+                                          lam = 2)
+for(i in 501:1000)  l2[[i]] = sim_pois_ar(n = 200, phi = 0.2,
+                                          lam = 2)
+for(i in 1001:1500) l2[[i]] = sim_pois_ar(n = 200, phi = 0.7,
+                                          lam = 10)
+for(i in 1501:2000) l2[[i]] = sim_pois_ar(n = 200, phi = -0.7,
+                                          lam = 2)
 # set up cluster
 cl <- makeCluster(detectCores())
 # load our package for each node

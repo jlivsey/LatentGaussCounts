@@ -3,7 +3,7 @@
 #' Main execution function for latentGaussCounts package.
 #'
 #' @param x data
-#' @param count.family desired marginal distribution (Poisson, mixed-Poisson, ...)
+#' @param count.family desired marginal distribution (Poisson,mixed-Poisson,etc)
 #' @param gauss.series desired structure of your latent Gaussian process
 #' @param estim.method method used for estimating parameters
 #' @param max.terms maximum number of terms used to truncate Hermite expansions

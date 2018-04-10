@@ -57,9 +57,7 @@ close(pb)
 library(parallel)
 # load data as list
 l2 <- list()
-for(i in 1:500) l2[[i]] = sim_mixedpois_ar1(n = 200, phi = .7, p = .25, lam1 = 2, lam2 = 3)
-for(i in 501:1000) l2[[i]] = sim_mixedpois_ar1(n = 200, phi = .7, p = .25, lam1 = 2, lam2 = 10)
-for(i in 1001:1500) l2[[i]] = sim_mixedpois_ar1(n = 200, phi = .2, p = .25, lam1 = 2, lam2 = 10)
+for(i in 1:100) l2[[i]] = sim_mixedpois_ar1(n = 200, phi = .7, p = .25, lam1 = 2, lam2 = 10)
 # set up cluster
 cl <- makeCluster(detectCores())
 # load our package for each node
@@ -68,7 +66,25 @@ clusterEvalQ(cl, library(latentGaussCounts))
 clusterExport(cl, varlist = "l2")
 # Run LGC()
 system.time({
-out <- parLapply(cl, l2, function(x){
+out <- parLapply(cl, l2[1:5], function(x){
+                                      LGC(x,
+                                          count.family = "mixed-Poisson", n.mix=2,
+                                          gauss.series = "AR", p=1,
+                                          estim.method = "particlesSIS")
+                                    })
+})
+# This is first 5 runs
+system.time({
+out2 <- parLapply(cl, l2[6:25], function(x){
+                                      LGC(x,
+                                          count.family = "mixed-Poisson", n.mix=2,
+                                          gauss.series = "AR", p=1,
+                                          estim.method = "particlesSIS")
+                                    })
+})
+# This is next 20 runs (add previous 2 for first 25 runs)
+system.time({
+out3 <- parLapply(cl, l2[26:100], function(x){
                                       LGC(x,
                                           count.family = "mixed-Poisson", n.mix=2,
                                           gauss.series = "AR", p=1,
