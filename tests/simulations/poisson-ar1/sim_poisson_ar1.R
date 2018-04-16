@@ -43,13 +43,13 @@ save(simResults.poisAR1, file = "simResults_poisAR1.Rdata")
 library(parallel)
 # load data as list
 l2 <- list()
-for(i in 1:500)     l2[[i]] = sim_pois_ar(n = 200, phi = 0.7,
+for(i in 1:100)     l2[[i]] = sim_pois_ar(n = 200, phi = 0.7,
                                           lam = 2)
-for(i in 501:1000)  l2[[i]] = sim_pois_ar(n = 200, phi = 0.2,
+for(i in 101:200)  l2[[i]] = sim_pois_ar(n = 200, phi = 0.2,
                                           lam = 2)
-for(i in 1001:1500) l2[[i]] = sim_pois_ar(n = 200, phi = 0.7,
+for(i in 201:300) l2[[i]] = sim_pois_ar(n = 200, phi = 0.7,
                                           lam = 10)
-for(i in 1501:2000) l2[[i]] = sim_pois_ar(n = 200, phi = -0.7,
+for(i in 301:400) l2[[i]] = sim_pois_ar(n = 200, phi = -0.7,
                                           lam = 2)
 # set up cluster
 cl <- makeCluster(detectCores())
@@ -59,7 +59,41 @@ clusterEvalQ(cl, library(latentGaussCounts))
 clusterExport(cl, varlist = "l2")
 # Run LGC()
 system.time({
-out <- parLapply(cl, l2, function(x){
+out <- parLapply(cl, l2[1:5], function(x){
+                                      LGC(x,
+                                          count.family = "Poisson",
+                                          gauss.series = "AR", p=1,
+                                          estim.method = "particlesSIS")
+                                    })
+})
+# First 5
+system.time({
+out2 <- parLapply(cl, l2[6:25], function(x){
+                                      LGC(x,
+                                          count.family = "Poisson",
+                                          gauss.series = "AR", p=1,
+                                          estim.method = "particlesSIS")
+                                    })
+})
+# Next 20
+system.time({
+out3 <- parLapply(cl, l2[26:100], function(x){
+                                      LGC(x,
+                                          count.family = "Poisson",
+                                          gauss.series = "AR", p=1,
+                                          estim.method = "particlesSIS")
+                                    })
+})
+system.time({
+out4 <- parLapply(cl, l2[101:200], function(x){
+                                      LGC(x,
+                                          count.family = "Poisson",
+                                          gauss.series = "AR", p=1,
+                                          estim.method = "particlesSIS")
+                                    })
+})
+system.time({
+out5 <- parLapply(cl, l2[201:300], function(x){
                                       LGC(x,
                                           count.family = "Poisson",
                                           gauss.series = "AR", p=1,
