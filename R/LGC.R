@@ -93,7 +93,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson"),
       gauss.initial = function(x){ acf(x, plot = FALSE)$acf[2] }
       n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
       theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 1)
-      theta2.min = .01
+      theta2.min = -.99
       theta2.max = .99
     } else if(p==2){
       gamZ = function(h, phi){ ARMAacf(ar = phi, lag.max = 1000)[h+1] }
