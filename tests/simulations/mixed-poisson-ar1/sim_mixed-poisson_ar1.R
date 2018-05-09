@@ -3,7 +3,7 @@ phi.seq  = c(-.25, -.75)
 p.seq    = 1/4
 lam1.seq = 2
 lam2.seq = c(3, 5, 10)
-Nsim = 3
+Nsim = 200
 total.iter = Nsim * length(n.seq) * length(phi.seq) *
              length(lam1.seq) * length(lam2.seq) * length(p.seq)
 save.cols = c("estim.method", "n",
