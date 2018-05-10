@@ -4,15 +4,16 @@
 \alias{LGC}
 \title{Latent Gaussian Count model builder}
 \usage{
-LGC(x, count.family = c("Poisson", "mixed-Poisson"), gauss.series = c("AR",
-  "FARIMA"), estim.method = c("gaussianLik", "particlesSIS"),
-  max.terms = 30, p = NULL, d = NULL, q = NULL, n.mix = NULL,
-  n = NULL, print.progress = FALSE, print.initial.estimates = FALSE, ...)
+LGC(x, count.family = c("Poisson", "mixed-Poisson", "negbinom"),
+  gauss.series = c("AR", "FARIMA"), estim.method = c("gaussianLik",
+  "particlesSIS"), max.terms = 30, p = NULL, d = NULL, q = NULL,
+  n.mix = NULL, n = NULL, print.progress = FALSE,
+  print.initial.estimates = FALSE, ...)
 }
 \arguments{
 \item{x}{data}
 
-\item{count.family}{desired marginal distribution (Poisson, mixed-Poisson, ...)}
+\item{count.family}{desired marginal distribution (Poisson,mixed-Poisson,etc)}
 
 \item{gauss.series}{desired structure of your latent Gaussian process}
 
