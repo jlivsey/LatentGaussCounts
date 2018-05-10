@@ -34,7 +34,7 @@ for(dumb.variable in 1:Nsim){
 }}}}
 close(pb)
 
-save(simResults.poisAR1, file = "simResults_poisAR1.Rdata")
+# save(simResults.poisAR1, file = "simResults_poisAR1.Rdata")
 
 
 

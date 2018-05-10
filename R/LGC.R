@@ -21,7 +21,7 @@
 #' @export
 
 
-LGC <- function(x, count.family = c("Poisson", "mixed-Poisson"),
+LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom"),
                    gauss.series = c("AR","FARIMA"),
                    estim.method = c("gaussianLik","particlesSIS"),
                    max.terms = 30, p=NULL, d=NULL, q=NULL, n.mix=NULL, n=NULL,
@@ -76,7 +76,28 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson"),
      count.mean = function(theta){ n*theta }
      count.initial = function(data){ mean(data)/n }
      theta1.idx = 1
-   } else{ stop("please specify a valid count.family") }
+   } else if(count.family=="negbinom"){
+     cdf = function(x, theta){
+       pnbinom(q = x, size = theta[1], prob = theta[2])
+     }
+     pdf = function(x, theta){
+       dnbinom(x = x, size = theta[1], prob = theta[2])
+     }
+     count.mean = function(theta){
+       theta[1] * (1-theta[2]) / theta[2]
+     }
+     count.initial = function(data){
+       n = length(data)
+       m = mean(x)
+       v = var(x)
+       theta1.hat = m^2 / (v-m)
+       theta2.hat = m/v
+       return(c(theta1.hat, theta2.hat))
+     }
+     theta1.min = c(0.01, 0.01)
+     theta1.max = c(10  , 0.9)
+     theta1.idx = 1:2
+   }else{ stop("please specify a valid count.family") }
 
 
   # ---- Gauss.series input ---------------------------------------------------
@@ -113,6 +134,23 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson"),
     gauss.initial = function(data){ 1/4 }
     n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
     theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 1)
+  }
+
+  if(gauss.series=="MA"){
+    gamZ = function(h, tht){
+        if(h==0){
+            return(1)
+      } else if(h==1){
+            return(tht)
+      } else{
+            return(0)
+      }
+    }
+    gauss.initial = function(x){ acf(x, plot = FALSE)$acf[2] }
+    n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
+    theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 1)
+    theta2.min = -.99
+    theta2.max = .99
   }
 
 # ---- Estimation Methods -----------------------------------------------------
