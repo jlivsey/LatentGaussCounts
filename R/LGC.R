@@ -78,6 +78,8 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom"),
      theta1.idx = 1
    } else if(count.family=="negbinom"){
      cdf = function(x, theta){
+       print(x)
+       print(theta)
        pnbinom(q = x, size = theta[1], prob = theta[2])
      }
      pdf = function(x, theta){
@@ -94,7 +96,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom"),
        theta2.hat = m/v
        return(c(theta1.hat, theta2.hat))
      }
-     theta1.min = c(0.01, 0.01)
+     theta1.min = c(0.01, 0.1)
      theta1.max = c(10  , 0.9)
      theta1.idx = 1:2
    }else{ stop("please specify a valid count.family") }
@@ -141,7 +143,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom"),
         if(h==0){
             return(1)
       } else if(h==1){
-            return(tht)
+            return(tht/(1+tht^2))
       } else{
             return(0)
       }
@@ -184,6 +186,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom"),
       out = -2*mvtnorm::dmvnorm(as.numeric(data), mean = mean.vec,
                                 sigma = Sigma, log = TRUE)
       if(print.progress) cat(" lik = ", out, "\n")
+      if(out=="Inf"){ return(10^6) }
       return(out)
     }
   }
@@ -385,7 +388,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom"),
     optim.output <- optim(par = initial.param, fn = lik,
                           data=x, hessian=TRUE, method = "L-BFGS-B",
                           lower = c(theta1.min, theta2.min),
-                          upper = c(theta1.max, theta2.max), ...)
+                          upper = c(theta1.max, theta2.max))
     stder = rep(NA, length(initial.param))
     stder <- sqrt(diag(solve(optim.output$hessian))) # calculate standard error
     stder[is.nan(stder)] = 0
