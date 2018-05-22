@@ -21,7 +21,7 @@
 #' @export
 
 
-LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom"),
+LGC <- function(x, count.family,
                    gauss.series = c("AR","FARIMA"),
                    estim.method = c("gaussianLik","particlesSIS"),
                    max.terms = 30, p=NULL, d=NULL, q=NULL, n.mix=NULL, n=NULL,
@@ -78,8 +78,6 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom"),
      theta1.idx = 1
    } else if(count.family=="negbinom"){
      cdf = function(x, theta){
-       print(x)
-       print(theta)
        pnbinom(q = x, size = theta[1], prob = theta[2])
      }
      pdf = function(x, theta){
