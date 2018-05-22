@@ -4,11 +4,10 @@
 \alias{LGC}
 \title{Latent Gaussian Count model builder}
 \usage{
-LGC(x, count.family = c("Poisson", "mixed-Poisson", "negbinom"),
-  gauss.series = c("AR", "FARIMA"), estim.method = c("gaussianLik",
-  "particlesSIS"), max.terms = 30, p = NULL, d = NULL, q = NULL,
-  n.mix = NULL, n = NULL, print.progress = FALSE,
-  print.initial.estimates = FALSE, ...)
+LGC(x, count.family, gauss.series = c("AR", "FARIMA"),
+  estim.method = c("gaussianLik", "particlesSIS"), max.terms = 30,
+  p = NULL, d = NULL, q = NULL, n.mix = NULL, n = NULL,
+  print.progress = FALSE, print.initial.estimates = FALSE, ...)
 }
 \arguments{
 \item{x}{data}

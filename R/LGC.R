@@ -38,7 +38,7 @@ LGC <- function(x, count.family,
      count.mean = function(lam){ lam }
      count.initial = function(data){ mean(data) }
      theta1.min = 0.01
-     theta1.max = mean(x) + 5
+     theta1.max = mean(x) + 30
      theta1.idx = 1
    }  else if(count.family=="mixed-Poisson"){
     if(is.null(n.mix)) stop("you must specify the number of Poissons to mix,
