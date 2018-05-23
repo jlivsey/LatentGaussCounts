@@ -20,7 +20,6 @@
 #'
 #' @export
 
-
 LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "GenPoisson"),
                    gauss.series = c("AR","FARIMA"),
                    estim.method = c("gaussianLik","particlesSIS"),
@@ -38,7 +37,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
      count.mean = function(lam){ lam }
      count.initial = function(data){ mean(data) }
      theta1.min = 0.01
-     theta1.max = mean(x) + 5
+     theta1.max = mean(x) + 30
      theta1.idx = 1
    }
   #----------------------------------------------------------------------------------------------#
@@ -133,8 +132,6 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
      theta1.idx = 1
    } else if(count.family=="negbinom"){
      cdf = function(x, theta){
-       print(x)
-       print(theta)
        pnbinom(q = x, size = theta[1], prob = theta[2])
      }
      pdf = function(x, theta){

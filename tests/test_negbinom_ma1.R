@@ -22,11 +22,12 @@ theta = .25
 r = 3
 p = 1/2
 
-params = matrix(ncol=3, nrow=20)
-ses = matrix(ncol=3, nrow=20)
-for(i in 1:20)
+Nsim = 5
+params = matrix(ncol=3, nrow=Nsim)
+ses = matrix(ncol=3, nrow=Nsim)
+for(i in 1:Nsim)
 {
-x = sim_negbinom_ma1(n, theta, r, p)
+x <<- sim_negbinom_ma1(n, theta, r, p)
 optim.out = LGC(x,
     count.family = "negbinom",
     gauss.series = "MA", q=1,
