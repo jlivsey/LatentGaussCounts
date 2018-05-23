@@ -20,7 +20,6 @@
 #'
 #' @export
 
-
 LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "GenPoisson"),
                    gauss.series = c("AR","FARIMA"),
                    estim.method = c("gaussianLik","particlesSIS"),
