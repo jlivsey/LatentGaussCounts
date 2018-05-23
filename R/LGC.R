@@ -20,6 +20,8 @@
 #'
 #' @export
 
+# Hi Stefanso - can you please get me a confirmation number for the hotel?!
+
 LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "GenPoisson"),
                    gauss.series = c("AR","FARIMA"),
                    estim.method = c("gaussianLik","particlesSIS"),
