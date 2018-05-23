@@ -72,7 +72,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
      }
      theta1.min = c(0.01,0.01)
      theta1.max = c(0.99,mean(x) + 30)
-     theta1.idx = 2 # FIX ME: I am not sure what is this
+     theta1.idx = 1:2 # FIX ME: I am not sure what is this
     #----------------------------------------------------------------------------------------------#
    }else if(count.family=="mixed-Poisson"){
     if(is.null(n.mix)) stop("you must specify the number of Poissons to mix,
