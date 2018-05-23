@@ -43,7 +43,9 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
   #----------------------------------------------------------------------------------------------#
   #-------------------------------------Stef--May 22---------------------------------------------#
     else if(count.family=="GenPoisson"){
-     cdf= function(x,lambda,theta) {
+     cdf= function(x,parameter) {
+       lambda = parameter[1]
+       theta = parameter[2]
        cdf.vec <- rep(-99,length(x))
        for (i in 1:length(x)){
          cdf.vec[i] <- sum(pdf(0:x[i],lambda,theta))
@@ -51,40 +53,22 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
        return(cdf.vec)
      }
      # I am using the source code of the dgenpois function from the vglm package
-     pdf = function(x, lambda = 0, theta, log = FALSE) {
-       if (!is.logical(log.arg <- log) || length(log) != 1)
-         stop("bad input for argument 'log'")
-       rm(log)
-
-       LLL <- max(length(x), length(lambda), length(theta))
-       if (length(x)      != LLL) x      <- rep_len(x,      LLL)
-       if (length(lambda) != LLL) lambda <- rep_len(lambda, LLL)
-       if (length(theta)  != LLL) theta  <- rep_len(theta,  LLL)
-
-       llans <- -x*lambda - theta + (x-1) * log(theta + x*lambda) +
-         log(theta) - lgamma(x+1)
-       llans[x < 0] <- log(0)
-       llans[x != round(x)] <- log(0)  # x should be integer-valued
-       llans[lambda > 1] <- NaN
-       if (any(ind1 <- (lambda < 0))) {
-         epsilon <- 1.0e-9  # Needed to handle a "<" rather than a "<=".
-         mmm <- pmax(4, floor(theta/abs(lambda) - epsilon))
-         llans[ind1 & mmm < pmax(-1, -theta/mmm)] <- NaN
-         llans[ind1 & mmm < x] <- log(0)  # probability 0, not NaN
-       }
-       if (log.arg) {
-         llans
-       } else {
-         exp(llans)
-       }
+     pdf = function(x, parameter){
+       lambda = parameter[1]
+       theta = parameter[2]
+       dgenpois(x, lambda, theta, log = FALSE)
      }
-     count.mean = theta/(1-lambda)
+     count.mean = function(parameter){
+       lambda = parameter[1]
+       theta = parameter[2]
+       theta/(1-lambda)
+     }
      # FIX ME: I ll use method of moments to get initial values but this will only work when
      # lambda i between 0 and 1
      count.initial = function(data){
        lambda.hat = 1 - sqrt(mean(data))/sd(data) # FIX ME: solving for variance yields tqo solution plus/minus
                                              # need to compute likelihood for both and select the best
-       theta.hat = mean(data)*(1-lambda)
+       theta.hat = mean(data)*(1-lambda.hat)
        return(c(lambda.hat, theta.hat))
      }
      theta1.min = c(0.01,0.01)
