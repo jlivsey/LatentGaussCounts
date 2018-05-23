@@ -61,7 +61,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
      count.mean = function(parameter){
        lambda = parameter[1]
        theta = parameter[2]
-       theta/(1-lambda)
+       return(theta/(1-lambda))
      }
      # FIX ME: I ll use method of moments to get initial values but this will only work when
      # lambda i between 0 and 1
@@ -72,7 +72,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
        return(c(lambda.hat, theta.hat))
      }
      theta1.min = c(0.01,0.01)
-     theta1.max = c(0.99,0.99)
+     theta1.max = c(0.99,mean(x) + 30)
      theta1.idx = 2 # FIX ME: I am not sure what is this
     #----------------------------------------------------------------------------------------------#
    }else if(count.family=="mixed-Poisson"){
