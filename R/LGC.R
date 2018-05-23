@@ -52,11 +52,10 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
        }
        return(cdf.vec)
      }
-     # I am using the source code of the dgenpois function from the vglm package
      pdf = function(x, parameter){
        lambda = parameter[1]
        theta = parameter[2]
-       dgenpois(x, lambda, theta, log = FALSE)
+       PDFdgenpois(x, lambda, theta, log = FALSE)
      }
      count.mean = function(parameter){
        lambda = parameter[1]
@@ -194,8 +193,8 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
     g <- function(k, theta1){
       #her <- as.function(Polys[[k]]) # polys[[k]] = H_{k-1}
       N = which(round(cdf(1:1000, theta1), 7) == 1)[1]
-      if(length(N)==1 | is.na(N) ){
-        cat(sprintf("The max cdf value is %f",max(round(cdf(1:10, theta1), 7))))
+      if(length(N)==0 |is.na(N) ){
+        cat(sprintf("The max cdf value is %f and N=%f",max(round(cdf(1:10, theta1), 7)),N))
         stop("Haven't reached upper limit for cdf")
       }
       terms = exp(-qnorm(cdf(0:N, theta1))^2/2) *
