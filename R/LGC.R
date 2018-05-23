@@ -48,7 +48,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
        for (i in 1:length(x)){
          cdf.vec[i] <- sum(pdf(0:x[i],lambda,theta))
        }
-       return(cdf.vec
+       return(cdf.vec)
      }
      # I am using the source code of the dgenpois function from the vglm package
      pdf = function(x, lambda = 0, theta, log = FALSE) {
@@ -79,19 +79,16 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
        }
      }
      count.mean = theta/(1-lambda)
-     # FIX ME: I ll use methof of moments to get initial values but this will only work when
+     # FIX ME: I ll use method of moments to get initial values but this will only work when
      # lambda i between 0 and 1
-     count.mean = theta/(1-lambda)
      count.initial = function(data){
        lambda.hat = 1 - sqrt(mean(data))/sd(data) # FIX ME: solving for variance yields tqo solution plus/minus
                                              # need to compute likelihood for both and select the best
        theta.hat = mean(data)*(1-lambda)
        return(c(lambda.hat, theta.hat))
      }
-     theta1.min = 0.01
-     theta1.max = 0.99
-     theta2.min = 0.01
-     theta2.max = mean(data)+5 # can probs do better?
+     theta1.min = c(0.01,0.01)
+     theta1.max = c(0.99,0.99)
      theta1.idx = 2 # FIX ME: I am not sure what is this
     #----------------------------------------------------------------------------------------------#
    }else if(count.family=="mixed-Poisson"){
