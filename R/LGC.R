@@ -48,7 +48,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
        theta = parameter[2]
        cdf.vec <- rep(-99,length(x))
        for (i in 1:length(x)){
-         cdf.vec[i] <- sum(pdf(0:x[i],lambda,theta))
+         cdf.vec[i] <- sum(pdf(0:x[i],parameter))
        }
        return(cdf.vec)
      }
