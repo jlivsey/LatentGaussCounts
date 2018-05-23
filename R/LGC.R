@@ -193,7 +193,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
   if(estim.method=="gaussianLik"){
     g <- function(k, theta1){
       #her <- as.function(Polys[[k]]) # polys[[k]] = H_{k-1}
-      N = which(round(cdf(1:1000, theta1), 7) == 1)[1]
+      N = which(round(cdf(1:10000, theta1), 7) == 1)[1]
       if(length(N)==1 | is.na(N) ) stop("Haven't reached upper limit for cdf")
       terms = exp(-qnorm(cdf(0:N, theta1))^2/2) *
               Hermite_poly(k = k, x = qnorm(cdf(0:N, theta1)))
