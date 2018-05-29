@@ -141,6 +141,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
 
   # DEFINE a gamz function from gauss.series input. Make sure it accepts a
   #        vector valued input.
+  # FIX ME: using CLS estimates as initial points, instead of acf (for p=1 I left the acf one)
   if(gauss.series=="AR"){
     if(is.null(p)) stop("you must specify the AR order, p, to use
                         gauss.series=AR")
@@ -161,8 +162,6 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
       theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + p)
     }
   }
-
-
 
   if(gauss.series=="MA"){
     if(is.null(q)) stop("you must specify the MA order, q, to use
@@ -447,10 +446,15 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
   if(estim.method=="gaussianLik"){
     initial.param = c(count.initial(x), gauss.initial(x))
     if(print.initial.estimates) cat("initial parameter estimates: ", initial.param, "\n")
-    optim.output <- optim(par = initial.param, fn = lik,
-                          data=x, hessian=TRUE, method = "L-BFGS-B",
-                          lower = c(theta1.min, theta2.min),
-                          upper = c(theta1.max, theta2.max))
+    if(p>1){
+      optim.output <- optim(par = initial.param, fn = lik,
+                            data=x, hessian=TRUE, method = "L-BFGS-B")
+    }else{
+      optim.output <- optim(par = initial.param, fn = lik,
+                            data=x, hessian=TRUE, method = "L-BFGS-B",
+                            lower = c(theta1.min, theta2.min),
+                            upper = c(theta1.max, theta2.max))
+    }
     stder = rep(NA, length(initial.param))
     stder <- sqrt(diag(solve(optim.output$hessian))) # calculate standard error
     stder[is.nan(stder)] = 0
