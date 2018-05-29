@@ -43,7 +43,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
   #----------------------------------------------------------------------------------------------#
   #-------------------------------------Stef--May 22---------------------------------------------#
     else if(count.family=="GenPoisson"){
-     cdf= function(x,parameter) {
+     cdf= function(x,parameter) { # using Yisu's code for the cdf function
        lambda = parameter[1]
        theta = parameter[2]
        cdf.vec <- rep(-99,length(x))
@@ -55,6 +55,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
      pdf = function(x, parameter){
        lambda = parameter[1]
        theta = parameter[2]
+       # PDFdgenpois calls the dgenPois density function from VGAM package
        PDFdgenpois(x, lambda, theta, log = FALSE)
      }
      count.mean = function(parameter){
@@ -63,16 +64,18 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
        return(theta/(1-lambda))
      }
      # FIX ME: I ll use method of moments to get initial values but this will only work when
-     # lambda i between 0 and 1
+     # lambda is between 0 and 1
      count.initial = function(data){
-       lambda.hat = 1 - sqrt(mean(data))/sd(data) # FIX ME: solving for variance yields tqo solution plus/minus
-                                             # need to compute likelihood for both and select the best
+       # FIX ME: solving the system of two first moments
+       # as functions of parameter: the variance equation yields two solutions with plus/minus
+       # need to compute likelihood for both and select the best, instead here I am taking the plus
+       lambda.hat = 1 - sqrt(mean(data))/sd(data)
        theta.hat = mean(data)*(1-lambda.hat)
        return(c(lambda.hat, theta.hat))
      }
      theta1.min = c(0.01,0.01)
      theta1.max = c(0.99,mean(x) + 30)
-     theta1.idx = 1:2 # FIX ME: I am not sure what is this
+     theta1.idx = 1:2
     #----------------------------------------------------------------------------------------------#
    }else if(count.family=="mixed-Poisson"){
     if(is.null(n.mix)) stop("you must specify the number of Poissons to mix,
@@ -141,8 +144,6 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
   if(gauss.series=="AR"){
     if(is.null(p)) stop("you must specify the AR order, p, to use
                         gauss.series=AR")
-    if(p>3) stop("the ACVF is not coded for AR models of order higher than 1
-                 currently")
     if(p==1){
       gamZ = function(h, phi){ phi^h}
       gauss.initial = function(x){ acf(x, plot = FALSE)$acf[2] }
@@ -150,18 +151,43 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
       theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 1)
       theta2.min = -.99
       theta2.max = .99
-    } else if(p==2){
+    } else{
       gamZ = function(h, phi){ ARMAacf(ar = phi, lag.max = 1000)[h+1] }
-      gauss.initial = function(data){ acf(data, plot = FALSE)$acf[2:3] }
+      gauss.initial = function(data){
+        r = arma(data, order = c(p, 0))
+        return(r$coef[1:p])
+      }
       n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
-      theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 2)
-    } else if(p==3){
-      gamZ = function(h, phi){ ARMAacf(ar = phi, lag.max = 1000)[h+1] }
-      gauss.initial = function(data){ acf(data, plot = FALSE)$acf[2:4] }
-      n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
-      theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 3)
-    } else{ stop("the p specified is not valid") }
+      theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + p)
+    }
   }
+
+
+
+  if(gauss.series=="MA"){
+    if(is.null(q)) stop("you must specify the MA order, q, to use
+                        gauss.series=MA")
+    if(q==1){
+      gamZ = function(h, theta){ ARMAacf(ma = theta, lag.max = 1000)[h+1] }
+      gauss.initial = function(data){
+        r = arma(data, order = c(0, q))
+        return(r$coef[1:q])
+      }
+      n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
+      theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 1)
+      theta2.min = -.99
+      theta2.max = .99
+    } else {
+      gamZ = function(h, theta){ ARMAacf(ma = theta, lag.max = 1000)[h+1] }
+      gauss.initial = function(data){
+        r = arma(data, order = c(0, q))
+        return(r$coef[1:q])
+      }
+      n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
+      theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + q)
+    }
+  }
+
 
   if(gauss.series=="FARIMA"){ # currently only FARIMA(0,d,0)
     gamZ = function(h, d){ acf.farima0d0(d = d, h = h) }
