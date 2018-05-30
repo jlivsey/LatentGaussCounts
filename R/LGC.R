@@ -147,31 +147,26 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
     if(is.null(p)) stop("you must specify the AR order, p, to use
                         gauss.series=AR")
     if(p==1){
-      gamZ = function(h, phi){ phi^h}
-      gauss.initial = function(x){ acf(x, plot = FALSE)$acf[2] }
-      n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
-      theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 1)
       theta2.min = -.99
       theta2.max = .99
-    } else{
-      gamZ = function(h, phi){ ARMAacf(ar = phi, lag.max = 1000)[h+1] }
-      gauss.initial = function(data){
-        # assuming Poisson I can use method of moments for lambda, then apply inverse transform to obtain
-        # some Z's. These will not be normal r.v's as they will not take values on interval, however they still
-        # retain some of the AR structure and so I can use them for initial estiamtion. This
-        # FIX ME: allow for other distributions too
-        if(count.family=="Poisson"){
-          lhat = mean(data)
-          tmp = ppois(data,lhat)
-          z = qnorm(tmp) # this doesnt take values on an interval but may still be used for initial AR estimates
-          return(arima(z,order = c(p,0,0),include.mean=0)$coef)
+    }
+    gamZ = function(h, phi){ ARMAacf(ar = phi, lag.max = 1000)[h+1] }
+    gauss.initial = function(data){
+    # assuming Poisson I can use method of moments for lambda, then apply inverse transform to obtain
+    # some Z's. These will not be normal r.v's as they will not take values on interval, however they still
+    # retain some of the AR structure and so I can use them for initial estiamtion. This
+    # FIX ME: allow for other distributions too
+      if(count.family=="Poisson"){
+        lhat = mean(data)
+        tmp = ppois(data,lhat)
+        z = qnorm(tmp) # this doesnt take values on an interval but may still be used for initial AR estimates
+        return(arima(z,order = c(p,0,0),include.mean=0)$coef)
         }else{
           return(acf(data, plot = FALSE)$acf[2:(p+1)])
         }
       }
       n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
       theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + p)
-    }
   }
 
   if(gauss.series=="MA"){
@@ -179,34 +174,26 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
     if(is.null(q)) stop("you must specify the MA order, q, to use
                         gauss.series=MA")
     if(q==1){
-      gamZ = function(h, theta){ ARMAacf(ma = theta, lag.max = 1000)[h+1] }
-      gauss.initial = function(data){
-        r = arma(data, order = c(0, q))
-        return(r$coef[1:q])
-      }
-      n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
-      theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 1)
       theta2.min = -.99
       theta2.max = .99
-    } else {
-      gamZ = function(h, theta){ ARMAacf(ma = theta, lag.max = 1000)[h+1] }
-      gauss.initial = function(data){
-        # assuming Poisson I can use method of moments for lambda, then apply inverse transform to obtain
-        # some Z's. These will not be normal r.v's as they will not take values on interval, however they still
-        # retain some of the AR structure and so I can use them for initial estiamtion. This
-        # FIX ME: allow for other distributions too
-        if(count.family=="Poisson"){
-          lhat = mean(data)
-          tmp = ppois(data,lhat)
-          z = qnorm(tmp) # this doesnt take values on an interval but may still be used for initial AR estimates
-          return(arima(z,order = c(0,0,q),include.mean=0)$coef)
-        }else{
-          return(acf(data, plot = FALSE)$acf[2:(q+1)])
-        }
-      }
-      n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
-      theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + q)
     }
+    gamZ = function(h, theta){ ARMAacf(ma = theta, lag.max = 1000)[h+1] }
+    gauss.initial = function(data){
+    # assuming Poisson I can use method of moments for lambda, then apply inverse transform to obtain
+    # some Z's. These will not be normal r.v's as they will not take values on interval, however they still
+    # retain some of the AR structure and so I can use them for initial estiamtion. This
+    # FIX ME: allow for other distributions too
+    if(count.family=="Poisson"){
+      lhat = mean(data)
+      tmp = ppois(data,lhat)
+      z = qnorm(tmp) # this doesnt take values on an interval but may still be used for initial AR estimates
+      return(arima(z,order = c(0,0,q),include.mean=0)$coef)
+      }else{
+        return(acf(data, plot = FALSE)$acf[2:(q+1)])
+      }
+    }
+    n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
+    theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + q)
   }
 
 
