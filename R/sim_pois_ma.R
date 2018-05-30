@@ -1,4 +1,4 @@
-#' Simulate from Poisson-AR1 model
+#' Simulate from Poisson-MA model
 #'
 #' @param n length of series
 #' @param theta MA parameter
