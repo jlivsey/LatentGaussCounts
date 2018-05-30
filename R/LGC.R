@@ -226,7 +226,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
   if(estim.method=="gaussianLik"){
     g <- function(k, theta1){
       #her <- as.function(Polys[[k]]) # polys[[k]] = H_{k-1}
-      N = which(round(cdf(1:1000, theta1), 7) == 1)[1]
+      N = which(round(cdf(1:5000, theta1), 7) == 1)[1]
       if(length(N)==0 |is.na(N) ){
         cat(sprintf("The max cdf value is %f and N=%f",max(round(cdf(1:10, theta1), 7)),N))
         stop("Haven't reached upper limit for cdf")
@@ -245,16 +245,22 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
       if(print.progress) cat("theta = ", theta, "\n")
       theta1 = theta[theta1.idx]
       theta2 = theta[theta2.idx]
-      n   = length(data)
-      h   = 0:(n-1)
-      g.vec = c()
-      for(k in 1:30){g.vec[k] <- g(k=k, theta1 = theta1)}
-      gamX.vec = c()
-      for(i in 1:length(h)){gamX.vec[i] = gamX(h[i], theta2, gamZ, g.vec)}
-      Sigma = toeplitz(gamX.vec)
-      mean.vec = rep(count.mean(theta1), n)
-      out = -2*mvtnorm::dmvnorm(as.numeric(data), mean = mean.vec,
+      # Adding a check on invertibility codnition for MA=2
+      # FIX ME: Generalize this
+      if (q==2 && invertConstrMA2(theta2)){
+        out= Inf
+      }else{
+        n   = length(data)
+        h   = 0:(n-1)
+        g.vec = c()
+        for(k in 1:30){g.vec[k] <- g(k=k, theta1 = theta1)}
+        gamX.vec = c()
+        for(i in 1:length(h)){gamX.vec[i] = gamX(h[i], theta2, gamZ, g.vec)}
+        Sigma = toeplitz(gamX.vec)
+        mean.vec = rep(count.mean(theta1), n)
+        out = -2*mvtnorm::dmvnorm(as.numeric(data), mean = mean.vec,
                                 sigma = Sigma, log = TRUE)
+      }
       if(print.progress) cat(" lik = ", out, "\n")
       if(out=="Inf"){ return(10^6) }
       return(out)
