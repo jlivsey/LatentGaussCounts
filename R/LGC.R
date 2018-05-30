@@ -203,6 +203,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
         }else{
           return(acf(data, plot = FALSE)$acf[2:(q+1)])
         }
+      }
       n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
       theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + q)
     }
