@@ -143,6 +143,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
   #        vector valued input.
   # FIX ME: using CLS estimates as initial points, instead of acf (for p=1 I left the acf one)
   if(gauss.series=="AR"){
+    q = null #FIX ME: I do this here cause it will allo me to deal with optimization when I dont have LB and UB
     if(is.null(p)) stop("you must specify the AR order, p, to use
                         gauss.series=AR")
     if(p==1){
@@ -170,6 +171,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
   }
 
   if(gauss.series=="MA"){
+    p = null #FIX ME: I do this here cause it will allo me to deal with optimization when I dont have LB and UB
     if(is.null(q)) stop("you must specify the MA order, q, to use
                         gauss.series=MA")
     if(q==1){
@@ -458,7 +460,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
   if(estim.method=="gaussianLik"){
     initial.param = c(count.initial(x), gauss.initial(x))
     if(print.initial.estimates) cat("initial parameter estimates: ", initial.param, "\n")
-    if(p>1 | q>1){
+    if(max(p,q)>1){ # FIX ME: this if clause works cause I ve set p=NULL when MA and q=NULL when AR
       optim.output <- optim(par = initial.param, fn = lik,
                             data=x, hessian=TRUE, method = "L-BFGS-B")
     }else{
