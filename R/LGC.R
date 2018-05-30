@@ -217,22 +217,22 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
     theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 1)
   }
 
-  if(gauss.series=="MA"){
-    gamZ = function(h, tht){
-        if(h==0){
-            return(1)
-      } else if(h==1){
-            return(tht/(1+tht^2))
-      } else{
-            return(0)
-      }
-    }
-    gauss.initial = function(x){ acf(x, plot = FALSE)$acf[2] }
-    n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
-    theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 1)
-    theta2.min = -.99
-    theta2.max = .99
-  }
+#   if(gauss.series=="MA"){
+#     gamZ = function(h, tht){
+#         if(h==0){
+#             return(1)
+#       } else if(h==1){
+#             return(tht/(1+tht^2))
+#       } else{
+#             return(0)
+#       }
+#     }
+#     gauss.initial = function(x){ acf(x, plot = FALSE)$acf[2] }
+#     n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
+#     theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 1)
+#     theta2.min = -.99
+#     theta2.max = .99
+#   }
 
 # ---- Estimation Methods -----------------------------------------------------
 
