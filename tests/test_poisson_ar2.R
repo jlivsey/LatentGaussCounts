@@ -11,7 +11,7 @@ phi2 = -Re((1/xi1) * (1/xi2))
 c(phi1,phi2)
 
 #set.seed(Sys.time())
-x=sim_pois_ar1(n = 200, phi = c(phi1,phi2), lam = 2)
+x=sim_pois_ar(n = 200, phi = c(phi1,phi2), lam = 2)
 plot.ts(x)
 acf(x,  lag.max = 20)
 pacf(x, lag.max = 20)

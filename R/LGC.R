@@ -155,8 +155,14 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
     } else{
       gamZ = function(h, phi){ ARMAacf(ar = phi, lag.max = 1000)[h+1] }
       gauss.initial = function(data){
-        r = arma(data, order = c(p, 0))
-        return(r$coef[1:p])
+        # assuming Poisson I can use method of moments for lambda, then apply inverse transform to obtain
+        # some Z's. These will not be normal r.v's as they will not take values on interval, however they still
+        # retain some of the AR structure and so I can use them for initial estiamtion. This
+        # FIX ME: allow for other distributions too
+        lhat = mean(data)
+        tmp = ppois(data,lhat)
+        z = qnorm(tmp) # this doesnt take values on an interval but may still be used for initial AR estimates
+        return(arima(z,order = c(p,0,0),include.mean=0)$coef)
       }
       n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
       theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + p)
@@ -179,8 +185,14 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
     } else {
       gamZ = function(h, theta){ ARMAacf(ma = theta, lag.max = 1000)[h+1] }
       gauss.initial = function(data){
-        r = arma(data, order = c(0, q))
-        return(r$coef[1:q])
+        # assuming Poisson I can use method of moments for lambda, then apply inverse transform to obtain
+        # some Z's. These will not be normal r.v's as they will not take values on interval, however they still
+        # retain some of the AR structure and so I can use them for initial estiamtion. This
+        # FIX ME: allow for other distributions too
+        lhat = mean(data)
+        tmp = ppois(data,lhat)
+        z = qnorm(tmp) # this doesnt take values on an interval but may still be used for initial AR estimates
+        return(arima(z,order = c(0,0,q),include.mean=0)$coef)
       }
       n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
       theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + q)
