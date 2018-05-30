@@ -160,10 +160,14 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
         # some Z's. These will not be normal r.v's as they will not take values on interval, however they still
         # retain some of the AR structure and so I can use them for initial estiamtion. This
         # FIX ME: allow for other distributions too
-        lhat = mean(data)
-        tmp = ppois(data,lhat)
-        z = qnorm(tmp) # this doesnt take values on an interval but may still be used for initial AR estimates
-        return(arima(z,order = c(p,0,0),include.mean=0)$coef)
+        if(count.family=="Poisson"){
+          lhat = mean(data)
+          tmp = ppois(data,lhat)
+          z = qnorm(tmp) # this doesnt take values on an interval but may still be used for initial AR estimates
+          return(arima(z,order = c(p,0,0),include.mean=0)$coef)
+        }else{
+          return(acf(data, plot = FALSE)$acf[2:(p+1)])
+        }
       }
       n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
       theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + p)
@@ -191,11 +195,14 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
         # some Z's. These will not be normal r.v's as they will not take values on interval, however they still
         # retain some of the AR structure and so I can use them for initial estiamtion. This
         # FIX ME: allow for other distributions too
-        lhat = mean(data)
-        tmp = ppois(data,lhat)
-        z = qnorm(tmp) # this doesnt take values on an interval but may still be used for initial AR estimates
-        return(arima(z,order = c(0,0,q),include.mean=0)$coef)
-      }
+        if(count.family=="Poisson"){
+          lhat = mean(data)
+          tmp = ppois(data,lhat)
+          z = qnorm(tmp) # this doesnt take values on an interval but may still be used for initial AR estimates
+          return(arima(z,order = c(0,0,q),include.mean=0)$coef)
+        }else{
+          return(acf(data, plot = FALSE)$acf[2:(q+1)])
+        }
       n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
       theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + q)
     }
