@@ -458,7 +458,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
   if(estim.method=="gaussianLik"){
     initial.param = c(count.initial(x), gauss.initial(x))
     if(print.initial.estimates) cat("initial parameter estimates: ", initial.param, "\n")
-    if(p>1){
+    if(p>1 | q>1){
       optim.output <- optim(par = initial.param, fn = lik,
                             data=x, hessian=TRUE, method = "L-BFGS-B")
     }else{
