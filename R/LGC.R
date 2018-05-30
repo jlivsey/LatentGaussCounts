@@ -143,7 +143,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
   #        vector valued input.
   # FIX ME: using CLS estimates as initial points, instead of acf (for p=1 I left the acf one)
   if(gauss.series=="AR"){
-    q = null #FIX ME: I do this here cause it will allo me to deal with optimization when I dont have LB and UB
+    q = NULL #FIX ME: I do this here cause it will allo me to deal with optimization when I dont have LB and UB
     if(is.null(p)) stop("you must specify the AR order, p, to use
                         gauss.series=AR")
     if(p==1){
@@ -171,7 +171,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
   }
 
   if(gauss.series=="MA"){
-    p = null #FIX ME: I do this here cause it will allo me to deal with optimization when I dont have LB and UB
+    p = NULL #FIX ME: I do this here cause it will allo me to deal with optimization when I dont have LB and UB
     if(is.null(q)) stop("you must specify the MA order, q, to use
                         gauss.series=MA")
     if(q==1){
