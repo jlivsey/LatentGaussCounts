@@ -21,7 +21,7 @@
 #' @export
 
 LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "GenPoisson"),
-                   gauss.series = c("AR","FARIMA"),
+                   gauss.series = c("AR","MA","FARIMA"),
                    estim.method = c("gaussianLik","particlesSIS"),
                    max.terms = 30, p=NULL, d=NULL, q=NULL, n.mix=NULL, n=NULL,
                    print.progress=FALSE, print.initial.estimates=FALSE, ...)
