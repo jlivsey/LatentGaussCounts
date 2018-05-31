@@ -50,12 +50,8 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
        }
        return(cdf.vec)
      }
-     pdf = function(x, parameter){
-       lambda = parameter[1]
-       eta = parameter[2]
-       # PDFdgenpois calls the dgenPois density function from VGAM package
-       PDFdgenpois(x, lambda, eta)
-     }
+     cdf = function(x, parameter){pgpois(x, parameter[1], parameter[2])}
+     pdf = function(x, parameter){dgpois(x, parameter[1], parameter[2])}
      count.mean = function(parameter){
        lambda = parameter[1]
        eta = parameter[2]
