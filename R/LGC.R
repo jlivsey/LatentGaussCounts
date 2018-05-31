@@ -68,7 +68,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
        # as functions of parameter: the variance equation yields two solutions with plus/minus
        # need to compute likelihood for both and select the best, instead here I am taking the plus
        eta.hat = 1 - sqrt(mean(data))/sd(data)
-       lambda.hat = mean(data)*(1-lambda.hat)
+       lambda.hat = mean(data)*(1-eta.hat)
        return(c(lambda.hat, theta.hat))
      }
      theta1.min = c(0.01,0.01)
