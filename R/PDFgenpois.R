@@ -1,4 +1,4 @@
-PDFdgenpois <- function(x,lambda,eta {
+PDFdgenpois <- function(x,lambda,eta){
   tmp = log(lambda) + (x-1)*log(lambda+eta*x) -lgamma(x+1) - lambda - eta*x
   return(exp(tmp))
 }
