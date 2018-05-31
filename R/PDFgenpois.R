@@ -3,7 +3,8 @@ PDFdgenpois <- function(x,lambda,eta){
   return(exp(tmp))
 }
 # # GenPoisson density from VGAM package--I need to check if this is right
-#
+# # code below uses lambda instead of eta and theta instead of eta
+
 # PDFdgenpois <- function(x, lambda = 0, theta, log = FALSE) {
 #   if (!is.logical(log.arg <- log) || length(log) != 1)
 #     stop("bad input for argument 'log'")

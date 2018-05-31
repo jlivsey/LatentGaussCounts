@@ -44,8 +44,6 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
   #-------------------------------------Stef--May 22---------------------------------------------#
     else if(count.family=="GenPoisson"){
      cdf= function(x,parameter) { # using Yisu's code for the cdf function
-       lambda = parameter[1]
-       theta = parameter[2]
        cdf.vec <- rep(-99,length(x))
        for (i in 1:length(x)){
          cdf.vec[i] <- sum(pdf(0:x[i],parameter))
@@ -54,14 +52,14 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
      }
      pdf = function(x, parameter){
        lambda = parameter[1]
-       theta = parameter[2]
+       eta = parameter[2]
        # PDFdgenpois calls the dgenPois density function from VGAM package
-       PDFdgenpois(x, lambda, theta, log = FALSE)
+       PDFdgenpois(x, lambda, eta)
      }
      count.mean = function(parameter){
        lambda = parameter[1]
-       theta = parameter[2]
-       return(theta/(1-lambda))
+       eta = parameter[2]
+       return(lambda/(1-eta))
      }
      # FIX ME: I ll use method of moments to get initial values but this will only work when
      # lambda is between 0 and 1
@@ -69,12 +67,12 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
        # FIX ME: solving the system of two first moments
        # as functions of parameter: the variance equation yields two solutions with plus/minus
        # need to compute likelihood for both and select the best, instead here I am taking the plus
-       lambda.hat = 1 - sqrt(mean(data))/sd(data)
-       theta.hat = mean(data)*(1-lambda.hat)
+       eta.hat = 1 - sqrt(mean(data))/sd(data)
+       lambda.hat = mean(data)*(1-lambda.hat)
        return(c(lambda.hat, theta.hat))
      }
      theta1.min = c(0.01,0.01)
-     theta1.max = c(0.99,mean(x) + 30)
+     theta1.max = c(mean(x) + 30,0.99)
      theta1.idx = 1:2
     #----------------------------------------------------------------------------------------------#
    }else if(count.family=="mixed-Poisson"){
