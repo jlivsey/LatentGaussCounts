@@ -69,7 +69,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
        # need to compute likelihood for both and select the best, instead here I am taking the plus
        eta.hat = 1 - sqrt(mean(data))/sd(data)
        lambda.hat = mean(data)*(1-eta.hat)
-       return(c(lambda.hat, theta.hat))
+       return(c(lambda.hat, eta.hat))
      }
      theta1.min = c(0.01,0.01)
      theta1.max = c(mean(x) + 30,0.99)
