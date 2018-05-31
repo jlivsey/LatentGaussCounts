@@ -72,7 +72,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
        return(c(lambda.hat, eta.hat))
      }
      theta1.min = c(0.01,0.01)
-     theta1.max = c(mean(x) + 30,0.99)
+     theta1.max = c(mean(data) + 30,0.99)
      theta1.idx = 1:2
     #----------------------------------------------------------------------------------------------#
    }else if(count.family=="mixed-Poisson"){
