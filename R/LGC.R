@@ -235,16 +235,36 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
     gamX = function(h, theta2, gamZ, g.vec, max.terms=30){
       sum(g.vec^2 * factorial(1:max.terms) * (gamZ(h, theta2))^(1:max.terms))
     }
-
-    lik = function(theta, data){
-      if(print.progress) cat("theta = ", theta, "\n")
-      theta1 = theta[theta1.idx]
-      theta2 = theta[theta2.idx]
-      # Adding a check on invertibility codnition for MA=2
-      # FIX ME: Generalize this
-      if (q==2 && invertConstrMA2(theta2)){
-        out= Inf
-      }else{
+    if(gauss.series=="MA"){
+      lik = function(theta, data){
+        if(print.progress) cat("theta = ", theta, "\n")
+        theta1 = theta[theta1.idx]
+        theta2 = theta[theta2.idx]
+        # Adding a check on invertibility codnition for MA=2
+        # FIX ME: Generalize this
+        if (q==2 && invertConstrMA2(theta2)){
+          out= Inf
+        }else{
+          n   = length(data)
+          h   = 0:(n-1)
+          g.vec = c()
+          for(k in 1:30){g.vec[k] <- g(k=k, theta1 = theta1)}
+          gamX.vec = c()
+          for(i in 1:length(h)){gamX.vec[i] = gamX(h[i], theta2, gamZ, g.vec)}
+          Sigma = toeplitz(gamX.vec)
+          mean.vec = rep(count.mean(theta1), n)
+          out = -2*mvtnorm::dmvnorm(as.numeric(data), mean = mean.vec,
+                                    sigma = Sigma, log = TRUE)
+        }
+        if(print.progress) cat(" lik = ", out, "\n")
+        if(out=="Inf"){ return(10^6) }
+        return(out)
+      }
+    }else{
+      lik = function(theta, data){
+        if(print.progress) cat("theta = ", theta, "\n")
+        theta1 = theta[theta1.idx]
+        theta2 = theta[theta2.idx]
         n   = length(data)
         h   = 0:(n-1)
         g.vec = c()
@@ -254,11 +274,11 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
         Sigma = toeplitz(gamX.vec)
         mean.vec = rep(count.mean(theta1), n)
         out = -2*mvtnorm::dmvnorm(as.numeric(data), mean = mean.vec,
-                                sigma = Sigma, log = TRUE)
+                                    sigma = Sigma, log = TRUE)
+        if(print.progress) cat(" lik = ", out, "\n")
+        if(out=="Inf"){ return(10^6) }
+        return(out)
       }
-      if(print.progress) cat(" lik = ", out, "\n")
-      if(out=="Inf"){ return(10^6) }
-      return(out)
     }
   }
 
