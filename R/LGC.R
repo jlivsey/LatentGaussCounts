@@ -484,7 +484,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
     if(print.initial.estimates) cat("initial parameter estimates: ", initial.param, "\n")
     if(max(p,q)>1){ # FIX ME: this if clause works cause I ve set p=NULL when MA and q=NULL when AR
       optim.output <- optim(par = initial.param, fn = lik,
-                            data=x, hessian=TRUE, method = "L-BFGS-B")
+                            data=x, hessian=TRUE, method = "BFGS")
     }else{
       optim.output <- optim(par = initial.param, fn = lik,
                             data=x, hessian=TRUE, method = "L-BFGS-B",
