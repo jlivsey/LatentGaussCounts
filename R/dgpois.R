@@ -1,4 +1,14 @@
-# pdf of generalized poisson
+#' pdf of generalized poisson
+#'
+#' @param x series
+#' @param lambda 1 parameter
+#' @param eta 2 parameter
+#'
+#' @return pdf
+#' @export
+#'
+#'
+
 dgpois <- function(x,lambda,eta){
   tmp = log(lambda) + (x-1)*log(lambda+eta*x) -lgamma(x+1) - lambda - eta*x
   return(exp(tmp))

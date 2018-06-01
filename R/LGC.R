@@ -69,7 +69,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
        return(c(lambda.hat, eta.hat))
      }
      theta1.min = c(0.01,0.01)
-     theta1.max = c(mean(x) + 30,0.99)
+     theta1.max = c(mean(x) + 30,0.99) #FIX ME: I am not sure this is ok for lambda
      theta1.idx = 1:2
     #----------------------------------------------------------------------------------------------#
    }else if(count.family=="mixed-Poisson"){
@@ -241,8 +241,8 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
         theta1 = theta[theta1.idx]
         theta2 = theta[theta2.idx]
         # Adding a check on invertibility codnition for MA=2
-        # FIX ME: Generalize this
-        if (q==2 && invertConstrMA2(theta2)){
+        # FIX ME: I assume here that the MA polynomial is 1+th1*x+th2*x^2+...
+        if (any(abs(polyroot(c(1,theta2)))<1)){
           out= Inf
         }else{
           n   = length(data)
@@ -265,16 +265,22 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
         if(print.progress) cat("theta = ", theta, "\n")
         theta1 = theta[theta1.idx]
         theta2 = theta[theta2.idx]
-        n   = length(data)
-        h   = 0:(n-1)
-        g.vec = c()
-        for(k in 1:30){g.vec[k] <- g(k=k, theta1 = theta1)}
-        gamX.vec = c()
-        for(i in 1:length(h)){gamX.vec[i] = gamX(h[i], theta2, gamZ, g.vec)}
-        Sigma = toeplitz(gamX.vec)
-        mean.vec = rep(count.mean(theta1), n)
-        out = -2*mvtnorm::dmvnorm(as.numeric(data), mean = mean.vec,
+        # Adding a check on invertibility codnition for MA=2
+        # FIX ME: I assume here that the AR polynomial is 1-phi1*x-phi2*x^2-...
+        if (any(abs(polyroot(c(1,-theta2)))<1)){
+          out= Inf
+        }else{
+          n   = length(data)
+          h   = 0:(n-1)
+          g.vec = c()
+          for(k in 1:30){g.vec[k] <- g(k=k, theta1 = theta1)}
+          gamX.vec = c()
+          for(i in 1:length(h)){gamX.vec[i] = gamX(h[i], theta2, gamZ, g.vec)}
+          Sigma = toeplitz(gamX.vec)
+          mean.vec = rep(count.mean(theta1), n)
+          out = -2*mvtnorm::dmvnorm(as.numeric(data), mean = mean.vec,
                                     sigma = Sigma, log = TRUE)
+        }
         if(print.progress) cat(" lik = ", out, "\n")
         if(out=="Inf"){ return(10^6) }
         return(out)

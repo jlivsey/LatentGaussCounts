@@ -1,5 +1,5 @@
 #set.seed(Sys.time())
-x=sim_pois_ma(n = 400, theta = 0.7, lam = 2)
+x=sim_pois_ma(n = 200, theta = 0.5, lam = 2)
 plot.ts(x)
 acf(x,lag.max = 20)
 
