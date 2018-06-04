@@ -1,7 +1,7 @@
 
-n = 200
+n = 400
 theta = .25
-theta = c(0.1,0.7)
+# theta = c(0.1,0.7)
 r = 3
 p = 1/2
 x = sim_negbinom_ma1(n, theta, r, p)
@@ -11,7 +11,7 @@ x = sim_negbinom_ma1(n, theta, r, p)
 
 LGC(x,
     count.family = "negbinom",
-    gauss.series = "MA", q=2,
+    gauss.series = "MA", q=1,
     estim.method = "gaussianLik",
     print.initial.estimates = TRUE,
     print.progress = TRUE)
