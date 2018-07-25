@@ -1,7 +1,7 @@
 # setup params to sim from
-n.seq   = c(100, 400)
-tht.seq = c(-.75, -.25, .25, .75)
-p.seq = c(.2, .5)
+n.seq   = c(200)
+tht.seq = c(-.75, .75)
+p.seq = c(.2)
 r.seq = 3
 Nsim = 200 # total iterations per param configuration
 

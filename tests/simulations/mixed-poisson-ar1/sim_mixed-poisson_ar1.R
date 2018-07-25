@@ -1,8 +1,8 @@
-n.seq    = c(200, 400)
-phi.seq  = c(-.25, -.75)
+n.seq    = c(100)
+phi.seq  = c(.75)
 p.seq    = 1/4
 lam1.seq = 2
-lam2.seq = c(3, 5, 10)
+lam2.seq = c(5, 10)
 Nsim = 200
 total.iter = Nsim * length(n.seq) * length(phi.seq) *
              length(lam1.seq) * length(lam2.seq) * length(p.seq)
