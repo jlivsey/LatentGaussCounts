@@ -295,6 +295,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
                  currently")
     if(p==1){
       #set.seed(1)
+      # switching to CRN
       z.rest = function(a,b){
         # Generates N(0,1) variables restricted to (ai,bi),i=1,...n
         qnorm(runif(length(a),0,1)*(pnorm(b,0,1)-pnorm(a,0,1))+pnorm(a,0,1),0,1)
