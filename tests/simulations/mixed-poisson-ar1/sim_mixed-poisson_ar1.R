@@ -104,7 +104,7 @@ library(latentGaussCounts)
 library(orthopolynom)
 polys <- hermite.he.polynomials(100) # In global env for g_coefs() function - BAD PROGRAMING
 source("~/Dropbox/jim/MVcopula/code/functions.R")
-n.coefs = 20
+n.coefs <- 20
 
 idx = 1
 pb <- txtProgressBar(min=2,max=total.iter,style=3)
@@ -124,8 +124,8 @@ for(n.idx in 1:length(n.seq)){
 
             # Estimate Mixed-Poisson params
             n = length(x)
-            n2 = floor(length(x)/2)
-            p.hat = 1/2
+            p.hat = 1/4
+            n2 = floor(length(x)*p.hat)
             theta1.hat = mean(sort(x)[1:n2])
             theta2.hat = mean(sort(x)[(n2+1):n])
             param.est <- c(p.hat, theta1.hat, theta2.hat)
@@ -164,33 +164,6 @@ for(n.idx in 1:length(n.seq)){
             idx = idx + 1
             setTxtProgressBar(pb,idx)
           }}}}}}
-close(pb)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        simResults.poisAR1[idx, "estim.method"] = "impliedYW"
-        simResults.poisAR1[idx, "n"] = n
-        simResults.poisAR1[idx, "lam.true"] = lam
-        simResults.poisAR1[idx, "lam.est"]  = param.est[1]
-        simResults.poisAR1[idx, "phi.true"] = phi
-        simResults.poisAR1[idx, "phi.est"]  = param.est[2]
-        idx = idx + 1
-        setTxtProgressBar(pb, idx)
-      }}}}
 close(pb)
 
 # Save results as .Rdata object
