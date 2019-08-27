@@ -15,6 +15,9 @@ simResults.mixedpoisAR1 = data.frame(matrix(nrow = total.iter,
                                             ncol = length(save.cols)))
 colnames(simResults.mixedpoisAR1) = save.cols
 
+
+# --- Add Gaussian Likelihood results to simResults matrix ----
+
 idx = 1
 pb <- txtProgressBar(min=2,max=total.iter,style=3)
 for(n.idx in 1:length(n.seq)){
@@ -53,6 +56,7 @@ for(dumb.variable in 1:Nsim){
 close(pb)
 
 
+# ---- Add Particle filtering results to SimResults matrix ----
 # ---- Windows parallel -------------------------------------------------------
 library(parallel)
 # load data as list
@@ -93,4 +97,106 @@ out3 <- parLapply(cl, l2[26:100], function(x){
 })
 # Stop the cluster
 stopCluster(cl)
+
+
+# ---- Add implied Yule-Walker estim results to SimResults matrix ----
+library(latentGaussCounts)
+library(orthopolynom)
+polys <- hermite.he.polynomials(100) # In global env for g_coefs() function - BAD PROGRAMING
+source("~/Dropbox/jim/MVcopula/code/functions.R")
+n.coefs = 20
+
+idx = 1
+pb <- txtProgressBar(min=2,max=total.iter,style=3)
+for(n.idx in 1:length(n.seq)){
+  for(phi.idx in 1:length(phi.seq)){
+    for(lam1.idx in 1:length(lam1.seq)){
+      for(lam2.idx in 1:length(lam2.seq)){
+        for(p.idx in 1:length(p.seq)){
+          for(dumb.variable in 1:Nsim){
+            n   = n.seq[n.idx]
+            phi = phi.seq[phi.idx]
+            lam1 = lam1.seq[lam1.idx]
+            lam2 = lam2.seq[lam2.idx]
+            p = p.seq[p.idx]
+
+            x = sim_mixedpois_ar1(n = n, phi = phi, p = p, lam1 = lam1, lam2 = lam2)
+
+            # Estimate Mixed-Poisson params
+            n = length(x)
+            n2 = floor(length(x)/2)
+            p.hat = 1/2
+            theta1.hat = mean(sort(x)[1:n2])
+            theta2.hat = mean(sort(x)[(n2+1):n])
+            param.est <- c(p.hat, theta1.hat, theta2.hat)
+
+            # Calculate Hermite coefficients
+            g.coefs = g_coefs_cdf(pmixpois_vecparam, param.est, k = 1:n.coefs)
+
+            # Coefficients of f: gam.x --> gam.z
+            process.var <- var(x)
+            f.coefs = factorial(1:n.coefs) * g.coefs^2 / process.var
+
+            # coefficients of f^-1: gam.z --> gam.x
+            finv.coefs = reversion(f.coefs)
+
+            # sample acf X
+            rho.x = acf(x, lag.max = 1, plot = FALSE, type = "correlation")$acf
+            rho.x = rho.x[-1]
+
+            # reversion to Z
+            rho.z = power_series(rho.x, finv.coefs)
+
+            simResults.mixedpoisAR1$estim.method[idx] = "impliedYW"
+            simResults.mixedpoisAR1$n[idx]         = n
+            simResults.mixedpoisAR1$p.true[idx]    = p
+            simResults.mixedpoisAR1$p.est[idx]     = p.hat
+            simResults.mixedpoisAR1$p.se[idx]      = NA
+            simResults.mixedpoisAR1$lam1.true[idx] = lam1
+            simResults.mixedpoisAR1$lam1.est[idx]  = theta1.hat
+            simResults.mixedpoisAR1$lam1.se[idx]   = NA
+            simResults.mixedpoisAR1$lam2.true[idx] = lam2
+            simResults.mixedpoisAR1$lam2.est[idx]  = theta2.hat
+            simResults.mixedpoisAR1$lam2.se[idx]   = NA
+            simResults.mixedpoisAR1$phi.true[idx]  = phi
+            simResults.mixedpoisAR1$phi.est[idx]   = rho.z
+            simResults.mixedpoisAR1$phi.se[idx]    = NA
+            idx = idx + 1
+            setTxtProgressBar(pb,idx)
+          }}}}}}
+close(pb)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        simResults.poisAR1[idx, "estim.method"] = "impliedYW"
+        simResults.poisAR1[idx, "n"] = n
+        simResults.poisAR1[idx, "lam.true"] = lam
+        simResults.poisAR1[idx, "lam.est"]  = param.est[1]
+        simResults.poisAR1[idx, "phi.true"] = phi
+        simResults.poisAR1[idx, "phi.est"]  = param.est[2]
+        idx = idx + 1
+        setTxtProgressBar(pb, idx)
+      }}}}
+close(pb)
+
+# Save results as .Rdata object
+# simResults.poisAR1 <- simResults_poisson_ar1
+# setwd("~/Desktop/LatentGaussCounts/tests/simulations/poisson-ar1")
+# save(simResults_poisson_ar1, file = "simResults_poisson_ar1.Rdata")
+
+
 

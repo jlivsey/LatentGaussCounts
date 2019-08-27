@@ -121,6 +121,7 @@ mclapply(l2, function(x){
 
 
 # ---- Add implied Yule-Walker estim results to SimResults matrix ----
+library(latentGaussCounts)
 library(orthopolynom)
 polys <- hermite.he.polynomials(100) # In global env for g_coefs() function - BAD PROGRAMING
 source("~/Dropbox/jim/MVcopula/code/functions.R")
@@ -183,7 +184,6 @@ close(pb)
 # simResults.poisAR1 <- simResults_poisson_ar1
 # setwd("~/Desktop/LatentGaussCounts/tests/simulations/poisson-ar1")
 # save(simResults_poisson_ar1, file = "simResults_poisson_ar1.Rdata")
-
 
 
 

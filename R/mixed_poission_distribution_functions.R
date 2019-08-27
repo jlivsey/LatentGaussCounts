@@ -53,6 +53,28 @@ pmixpois = function(x, p, lam1, lam2){
   return(y)
 }
 
+
+
+
+#' Vector input CDF of mixed-Poisson distribution
+#'
+#' @param x evaluation point (or vector)
+#' @param param vector of parameters. c(p, lam1, lam2)
+#'
+#' @return CDF at x with specified parameters
+#' @export
+#'
+
+pmixpois_vecparam = function(x, param){
+  p <- param[1]
+  lam1 <- param[2]
+  lam2 <- param[3]
+  y = p*ppois(x,lam1) + (1-p)*ppois(x,lam2)
+  return(y)
+}
+
+
+
 #' Inverse CDF/Quantile function for mixed-Poisson distribution
 #'
 #' @param y evaluation point (or vector)
