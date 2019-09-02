@@ -84,6 +84,10 @@ segments(1:R, lam.est.lo, 1:R, lam.est.up, col = "blue", lty = 1)
 
 
 
+###
+
+
+likSIS_ARp(c(2,.7),x)
 
 
 

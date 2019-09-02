@@ -22,7 +22,7 @@
 
 LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "GenPoisson"),
                    gauss.series = c("AR","MA","FARIMA"),
-                   estim.method = c("gaussianLik","particlesSIS"),
+                   estim.method = c("gaussianLik","particlesSIS","particlesSISnew"),
                    max.terms = 30, p=NULL, d=NULL, q=NULL, n.mix=NULL, n=NULL,
                    print.progress=FALSE, print.initial.estimates=FALSE, ...)
 {
@@ -419,6 +419,99 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
     } else{ stop("the p specified is not valid") }
   }
 
+
+  if ((gauss.series=="AR") & (estim.method=="particlesSISnew")){
+    if(is.null(p)) stop("you must specify the AR order, p, to use
+                        gauss.series=AR")
+
+    set.seed(1)
+
+    z.rest = function(a,b){
+      # Generates N(0,1) variables restricted to (ai,bi),i=1,...n
+      qnorm(runif(length(a),0,1)*(pnorm(b,0,1)-pnorm(a,0,1))+pnorm(a,0,1),0,1)
+    }
+
+
+    likSISnew = function(theta, data){
+      theta1 = theta[theta1.idx]
+      n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
+      theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + p)
+      phi = theta[theta2.idx]
+
+      if (prod(abs(polyroot(c(1,-phi))) > 1)){ # that is the ar model is causal
+
+        xt = data
+        T1 = length(xt)
+        N = 1000 # number of particles
+        prt = matrix(0,N,T1) # to collect all particles
+        wgh = matrix(0,N,T1) # to collect all particle weights
+
+        library(FitAR) # this probably needs to be uploaded differently
+
+        circulant <- function(x, nrow = length(x)) {
+          n <- length(x)
+          matrix(x[(1:n - rep(1:nrow, each=n)) %% n + 1L], ncol=n, byrow=TRUE)
+        }
+
+        a = qnorm(cdf(xt[1]-1,theta1),0,1)
+        b = qnorm(cdf(xt[1],theta1),0,1)
+        a = rep(a,N)
+        b = rep(b,N)
+        zprev = z.rest(a,b)
+        zhat = (TacvfAR(phi)[2]/TacvfAR(phi)[1])*zprev
+        prt[,1] = zhat
+
+        if (p==1){
+          rt = sqrt(1-phi^2)
+        }
+
+        if (p>=2){
+          for (t in 2:p){
+
+            Gt = circulant(TacvfAR(phi)[1:t])
+            gt = TacvfAR(phi)[2:(t+1)]
+            phit = solve(Gt) %*% gt
+            rt =  sqrt(TacvfAR(phi)[1] - gt %*% solve(Gt) %*% gt)
+
+            a = (qnorm(cdf(xt[t]-1,theta1),0,1) - sum(phit*zprev))/rt
+            b = (qnorm(cdf(xt[t],theta1),0,1) - sum(phit*zprev))/rt
+            err = z.rest(a,b)
+            znew = sum(phti*zprev) + rt*err
+            znew = c(znew,zprev[1])
+            zhat = sum(phit*znew)
+            prt[,t] = zhat
+            zprev = znew
+
+            wgh[,t] = wprev*(pnorm(b,0,1) - pnorm(a,0,1))
+            wprev = wgh[,t]
+          }
+        }
+
+        for (t in (p+1):T1){
+
+          a = (qnorm(cdf(xt[t]-1,theta1),0,1) - sum(phi*zprev))/rt
+          b = (qnorm(cdf(xt[t],theta1),0,1) - sum(phi*zprev))/rt
+          err = z.rest(a,b)
+          znew = sum(phi*zprev) + rt*err
+          znew = c(znew,zprev[1])
+          zhat = sum(phi*znew)
+          prt[,t] = zhat
+          zprev = znew
+
+          wgh[,t] = wprev*(pnorm(b,0,1) - pnorm(a,0,1))
+          wprev = wgh[,t]
+        }
+
+        lik = pdf(xt[1],theta1)*mean(wgh[,T1])
+        nloglik = (-2)*log(lik)
+        out = (if (is.na(nloglik) | lik==0) Inf else nloglik)
+
+      }else{
+        out = Inf
+      }
+    }
+  }
+
   if ((gauss.series=="FARIMA") & (estim.method=="particlesSIS")){
     #set.seed(1)
     z.rest = function(a,b){
@@ -508,6 +601,13 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
       optim.output <- as.vector(R0$optim$bestmem)
     }
   }
+
+  if((gauss.series=="AR") & (estim.method=="particlesSISnew")){
+    initial.param = c(count.initial(x), gauss.initial(x))
+    optim.output <- optim(par = initial.param, fn = likSISnew,
+                                            data=x, hessian=TRUE, method = "BFGS")
+  }
+
 
   if((gauss.series=="FARIMA") & (estim.method=="particlesSIS")){
       R0 <- DEoptim::DEoptim(likSIS, lower = c(theta1.min,-.49), upper = c(theta1.max,.49),control = DEoptim::DEoptim.control(trace = 10, itermax = 100, steptol = 50, reltol = 1e-5), data=x)

@@ -6,9 +6,10 @@
 \usage{
 LGC(x, count.family = c("Poisson", "mixed-Poisson", "negbinom",
   "GenPoisson"), gauss.series = c("AR", "MA", "FARIMA"),
-  estim.method = c("gaussianLik", "particlesSIS"), max.terms = 30,
-  p = NULL, d = NULL, q = NULL, n.mix = NULL, n = NULL,
-  print.progress = FALSE, print.initial.estimates = FALSE, ...)
+  estim.method = c("gaussianLik", "particlesSIS", "particlesSISnew"),
+  max.terms = 30, p = NULL, d = NULL, q = NULL, n.mix = NULL,
+  n = NULL, print.progress = FALSE, print.initial.estimates = FALSE,
+  ...)
 }
 \arguments{
 \item{x}{data}
