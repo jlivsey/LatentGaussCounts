@@ -51,7 +51,8 @@ likSIS_ARp = function(theta, data){
     a = rep(a,N)
     b = rep(b,N)
     zprev = z.rest(a,b)
-    zhat = (TacvfAR(phi)[2]/TacvfAR(phi)[1])*zprev
+    phit = TacvfAR(phi)[2]/TacvfAR(phi)[1]
+    zhat = phit*zprev
     prt[,1] = zhat
 
     wprev = rep(1,N)
@@ -64,22 +65,24 @@ likSIS_ARp = function(theta, data){
     if (p>=2){
       for (t in 2:p){
 
-        Gt = circulant(TacvfAR(phi)[1:t])
-        gt = TacvfAR(phi)[2:(t+1)]
-        phit = solve(Gt) %*% gt
-        rt =  sqrt(TacvfAR(phi)[1] - gt %*% solve(Gt) %*% gt)
-
-        a = (qnorm(cdf(xt[t]-1,theta1),0,1) - sum(phit*zprev))/rt
-        b = (qnorm(cdf(xt[t],theta1),0,1) - sum(phit*zprev))/rt
+        a = (qnorm(cdf(xt[t]-1,theta1),0,1) - rowSums(matrix(phit*zprev,ncol=(t-1))))/rt
+        b = (qnorm(cdf(xt[t],theta1),0,1) - rowSums(matrix(phit*zprev,ncol=(t-1))))/rt
         err = z.rest(a,b)
-        znew = sum(phti*zprev) + rt*err
+        znew = rowSums(matrix(phit*zprev,ncol=(t-1))) + rt*err
         znew = c(znew,zprev[1])
-        zhat = sum(phit*znew)
+        zhat = rowSums(matrix(phit*zprev,ncol=(t-1)))
         prt[,t] = zhat
         zprev = znew
 
         wgh[,t] = wprev*(pnorm(b,0,1) - pnorm(a,0,1))
         wprev = wgh[,t]
+
+
+        Gt = circulant(TacvfAR(phi)[1:t])
+        gt = TacvfAR(phi)[2:(t+1)]
+        phit = solve(Gt) %*% gt
+        rt =  sqrt(1 - gt %*% solve(Gt) %*% gt/TacvfAR(phi)[1])
+
       }
     }
 
@@ -100,9 +103,7 @@ likSIS_ARp = function(theta, data){
         b = (qnorm(cdf(xt[t],theta1),0,1) - sum(phi*zprev))/rt
         err = z.rest(a,b)
         znew = sum(phi*zprev) + rt*err
-        if (p>=2){
-          znew = c(znew,zprev[p-1])
-        }
+        znew = c(znew,zprev[p-1])
         zhat = sum(phi*znew)
         prt[,t] = zhat
         zprev = znew

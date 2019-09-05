@@ -87,7 +87,24 @@ segments(1:R, lam.est.lo, 1:R, lam.est.up, col = "blue", lty = 1)
 ###
 
 
-likSIS_ARp(c(2,.7),x)
+xi1 = 2
+xi2 = 5
 
+xi1 = 2*(1+1i*sqrt(3))/3
+xi2 = 2*(1-1i*sqrt(3))/3
+
+phi1 = Re(1/xi1 + 1/xi2)
+phi2 = -Re((1/xi1) * (1/xi2))
+
+c(phi1,phi2)
+
+
+
+x=sim_pois_ar(n = 200, phi = c(phi1,phi2), lam = 2)
+plot.ts(x)
+acf(x,  lag.max = 20)
+
+
+likSIS_ARp(c(2,phi1,phi2),x)
 
 
