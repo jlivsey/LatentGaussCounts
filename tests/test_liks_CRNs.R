@@ -102,9 +102,27 @@ c(phi1,phi2)
 
 x=sim_pois_ar(n = 200, phi = c(phi1,phi2), lam = 2)
 plot.ts(x)
-acf(x,  lag.max = 20)
-
+#acf(x,  lag.max = 20)
 
 likSIS_ARp(c(2,phi1,phi2),x)
+likSIS_AR2(c(2,phi1,phi2),x,setseed=TRUE)
 
 
+res = likSIS_ARp(c(2,phi1,phi2),x)
+
+count.mean = function(lam){ lam }
+count.initial = function(data){ mean(data) }
+
+gauss.initial = function(data){
+  p=2
+  lhat = mean(data)
+  tmp = ppois(data,lhat)
+  z = qnorm(tmp) # this doesnt take values on an interval but may still be used for initial AR estimates
+  return(arima(z,order = c(p,0,0),include.mean=0)$coef)
+}
+
+initial.param = c(count.initial(x), gauss.initial(x))
+
+optim.output <- optim(par = initial.param, fn = likSIS_ARp,
+                      data=x, hessian=TRUE, method = "BFGS")
+optim.output

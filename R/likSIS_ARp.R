@@ -13,7 +13,7 @@ likSIS_ARp = function(theta, data){
   pdf = function(x, lam){ dpois(x, lambda=lam) }
 
 
-  out = list()
+  #out = list()
   set.seed(1)
 
   p = length(theta)-1
@@ -52,15 +52,13 @@ likSIS_ARp = function(theta, data){
     b = rep(b,N)
     zprev = z.rest(a,b)
     phit = TacvfAR(phi)[2]/TacvfAR(phi)[1]
+    rt = sqrt(1-phit^2)
     zhat = phit*zprev
     prt[,1] = zhat
 
     wprev = rep(1,N)
     wgh[,1] = wprev
 
-    if (p==1){
-      rt = sqrt(1-phi^2)
-    }
 
     if (p>=2){
       for (t in 2:p){
@@ -69,7 +67,7 @@ likSIS_ARp = function(theta, data){
         b = (qnorm(cdf(xt[t],theta1),0,1) - rowSums(matrix(phit*zprev,ncol=(t-1))))/rt
         err = z.rest(a,b)
         znew = rowSums(matrix(phit*zprev,ncol=(t-1))) + rt*err
-        znew = c(znew,zprev[1])
+        znew = matrix(c(znew,zprev),ncol=t)
         zhat = rowSums(matrix(phit*zprev,ncol=(t-1)))
         prt[,t] = zhat
         zprev = znew
@@ -99,12 +97,12 @@ likSIS_ARp = function(theta, data){
       }
 
       if (p>=2){
-        a = (qnorm(cdf(xt[t]-1,theta1),0,1) - sum(phi*zprev))/rt
-        b = (qnorm(cdf(xt[t],theta1),0,1) - sum(phi*zprev))/rt
+        a = (qnorm(cdf(xt[t]-1,theta1),0,1) - rowSums(matrix(phi*zprev,ncol=p)))/rt
+        b = (qnorm(cdf(xt[t],theta1),0,1) - rowSums(matrix(phi*zprev,ncol=p)))/rt
         err = z.rest(a,b)
-        znew = sum(phi*zprev) + rt*err
-        znew = c(znew,zprev[p-1])
-        zhat = sum(phi*znew)
+        znew = rowSums(matrix(phi*zprev,ncol=p)) + rt*err
+        znew = matrix(c(znew,zprev[,-p]),ncol=p)
+        zhat = rowSums(matrix(phi*zprev,ncol=p))
         prt[,t] = zhat
         zprev = znew
       }
@@ -113,14 +111,17 @@ likSIS_ARp = function(theta, data){
       wprev = wgh[,t]
     }
 
-    lik = pdf(xt[1],theta1)*mean(wgh[,T1])
+    #lik = pdf(xt[1],theta1)*mean(wgh[,T1])
+    lik = pdf(xt[1],theta1)*mean(na.omit(wgh[,T1]))
     nloglik = (-2)*log(lik)
-    out$lik = (if (is.na(nloglik) | lik==0) Inf else nloglik)
-    out$prt =prt
-    out$wgh = wgh
+    out = (if (is.na(nloglik) | lik==0) Inf else nloglik)
+    #out$lik = (if (is.na(nloglik) | lik==0) Inf else nloglik)
+    #out$prt =prt
+    #out$wgh = wgh
 
   }else{
-    out$lik = Inf
+    out = Inf
+    #out$lik = Inf
   }
 
   return(out)
