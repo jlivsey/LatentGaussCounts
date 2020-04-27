@@ -299,12 +299,277 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
         # Generates N(0,1) variables restricted to (ai,bi),i=1,...n
         qnorm(runif(length(a),0,1)*(pnorm(b,0,1)-pnorm(a,0,1))+pnorm(a,0,1),0,1)
       }
-      likSIS = function(theta, data){
+      if (is.vector(x)){
+        likSIS = function(theta, data){
+          #set.seed(1)
+          theta1 = theta[theta1.idx]
+          n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
+          theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 1)
+          phi = theta[theta2.idx]
+          xt = data
+          T1 = length(xt)
+          N = 1000 # number of particles
+          prt = matrix(0,N,T1) # to collect all particles
+          wgh = matrix(0,N,T1) # to collect all particle weights
+
+          a = qnorm(cdf(xt[1]-1,theta1),0,1)
+          b = qnorm(cdf(xt[1],theta1),0,1)
+          a = rep(a,N)
+          b = rep(b,N)
+          zprev = z.rest(a,b)
+          zhat = phi*zprev
+          prt[,1] = zhat
+
+          wprev = rep(1,N)
+          wgh[,1] = wprev
+
+          for (t in 2:T1)
+          {
+            rt = sqrt(1-phi^2)
+            a = (qnorm(cdf(xt[t]-1,theta1),0,1) - phi*zprev)/rt
+            b = (qnorm(cdf(xt[t],theta1),0,1) - phi*zprev)/rt
+            err = z.rest(a,b)
+            znew = phi*zprev + rt*err
+            zhat = phi*znew
+            prt[,t] = zhat
+            zprev = znew
+
+            wgh[,t] = wprev*(pnorm(b,0,1) - pnorm(a,0,1))
+            wprev = wgh[,t]
+          }
+
+          lik = pdf(xt[1],theta1)*mean(wgh[,T1])
+          nloglik = (-2)*log(lik)
+
+          out = if (is.na(nloglik)) Inf else nloglik
+          return(out)
+        }
+      }else{
+        likSIS = function(theta, data){
+          #set.seed(1)
+          theta1 = theta[theta1.idx]
+          n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
+          theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 1)
+          phi = theta[theta2.idx]
+
+          xt = data[,1]
+          cvt = data[,-1]
+          cvt = cbind(rep(1,length(xt)),cvt) # comment if intercept not included
+          T1 = length(xt)
+          dd = dim(cvt)[2]
+          # dd=1 # if no intercept and just 1 covariate
+          theta10 = theta1[1:dd]
+          theta10 = exp(rowSums(matrix(rep(theta10,each=T1),ncol=dd)*cvt))
+          theta1 = cbind(theta10,rep(theta1[dd+1],T1))
+
+          N = 2000 # number of particles
+          prt = matrix(0,N,T1) # to collect all particles
+          wgh = matrix(0,N,T1) # to collect all particle weights
+
+          a = qnorm(cdf(xt[1]-1,theta1[1,]),0,1)
+          b = qnorm(cdf(xt[1],theta1[1,]),0,1)
+          a = rep(a,N)
+          b = rep(b,N)
+          zprev = z.rest(a,b)
+          zhat = phi*zprev
+          prt[,1] = zhat
+
+          wprev = rep(1,N)
+          wgh[,1] = wprev
+
+          for (t in 2:T1)
+          {
+            rt = sqrt(1-phi^2)
+            a = (qnorm(cdf(xt[t]-1,theta1[t,]),0,1) - phi*zprev)/rt
+            b = (qnorm(cdf(xt[t],theta1[t,]),0,1) - phi*zprev)/rt
+            err = z.rest(a,b)
+            znew = phi*zprev + rt*err
+            zhat = phi*znew
+            prt[,t] = zhat
+            zprev = znew
+
+            wgh[,t] = wprev*(pnorm(b,0,1) - pnorm(a,0,1))
+            wprev = wgh[,t]
+          }
+
+          lik = pdf(xt[1],theta1[1,])*mean(wgh[,T1])
+          nloglik = (-2)*log(lik)
+
+          out = if (is.na(nloglik)) Inf else nloglik
+          return(out)
+        }
+      }
+
+    } else if(p==2){
+      #set.seed(1)
+      z.rest = function(a,b){
+        # Generates N(0,1) variables restricted to (ai,bi),i=1,...n
+        qnorm(runif(length(a),0,1)*(pnorm(b,0,1)-pnorm(a,0,1))+pnorm(a,0,1),0,1)
+      }
+      if (is.vector(x)){
+        likSIS = function(theta, data){
+          # set.seed(1)
+          theta1 = theta[theta1.idx]
+          n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
+          theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 2)
+          phi = theta[theta2.idx]
+
+          if ( (phi[2]+phi[1]<1) & (phi[2]-phi[1]<1) & (abs(phi[2])<1)){
+            xt = data
+            T1 = length(xt)
+            N = 1000 # number of particles
+            prt = matrix(0,N,T1) # to collect all particles
+            wgh = matrix(0,N,T1) # to collect all particle weights
+
+            a1 = qnorm(cdf(xt[1]-1,theta1),0,1)
+            b1 = qnorm(cdf(xt[1],theta1),0,1)
+            a1 = rep(a1,N)
+            b1 = rep(b1,N)
+            zprev1 = z.rest(a1,b1)
+            zhat1 = phi[1]*zprev1
+            prt[,1] = zhat1
+
+            wprev = rep(1,N)
+            wgh[,1] = wprev
+
+            phi0 = if(abs(phi[1])<0.9){phi[1]}else{0.9*sign(phi[1])}
+            rt2 = sqrt(1-phi0^2)
+            a2 = (qnorm(cdf(xt[2]-1,theta1),0,1) - phi[1]*zprev1)/rt2
+            b2 = (qnorm(cdf(xt[2],theta1),0,1) - phi[1]*zprev1)/rt2
+            err2 = z.rest(a2,b2)
+            znew2 = phi0*zprev1 + rt2*err2
+            znew = c(znew2,zprev1)
+            zhat2 = sum(phi*znew)
+            prt[,2] = zhat2
+
+            wgh[,2] = wprev*(pnorm(b2,0,1) - pnorm(a2,0,1))
+            wprev = wgh[,2]
+
+            zprev = znew
+
+            for (t in 3:T1)
+            {
+              rt = 1/sqrt( ((1-phi[2])/(1+phi[2])) / ((1-phi[2])^2-phi[1]^2) )
+              a = (qnorm(cdf(xt[t]-1,theta1),0,1) - sum(phi*zprev))/rt
+              b = (qnorm(cdf(xt[t],theta1),0,1) - sum(phi*zprev))/rt
+              err = z.rest(a,b)
+              znew = sum(phi*zprev) + rt*err
+              znew = c(znew,zprev[1])
+              zhat = sum(phi*znew)
+              prt[,t] = zhat
+              zprev = znew
+
+              wgh[,t] = wprev*(pnorm(b,0,1) - pnorm(a,0,1))
+              wprev = wgh[,t]
+            }
+
+            lik = pdf(xt[1],theta1)*mean(wgh[,T1])
+            nloglik = (-2)*log(lik)
+
+            out = if (is.na(nloglik)) Inf else nloglik
+            return(out)
+          }else{
+            out = Inf
+            return(out)
+          }
+        }
+      }else{
+        likSIS = function(theta, data){
+          # set.seed(1)
+          theta1 = theta[theta1.idx]
+          n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
+          theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 2)
+          phi = theta[theta2.idx]
+
+          xt = data[,1]
+          cvt = data[,-1]
+          cvt = cbind(rep(1,length(xt)),cvt)
+          T1 = length(xt)
+          dd = dim(cvt)[2]
+          theta10 = theta1[1:dd]
+          theta10 = exp(rowSums(matrix(rep(theta10,each=T1),ncol=dd)*cvt))
+          theta1 = cbind(theta10,rep(theta1[dd+1],T1))
+
+          if ( (phi[2]+phi[1]<1) & (phi[2]-phi[1]<1) & (abs(phi[2])<1)){
+
+            N = 1000 # number of particles
+            prt = matrix(0,N,T1) # to collect all particles
+            wgh = matrix(0,N,T1) # to collect all particle weights
+
+            a1 = qnorm(cdf(xt[1]-1,theta1[1,]),0,1)
+            b1 = qnorm(cdf(xt[1],theta1[1,]),0,1)
+            a1 = rep(a1,N)
+            b1 = rep(b1,N)
+            zprev1 = z.rest(a1,b1)
+            zhat1 = phi[1]*zprev1
+            prt[,1] = zhat1
+
+            wprev = rep(1,N)
+            wgh[,1] = wprev
+
+            phi0 = if(abs(phi[1])<0.9){phi[1]}else{0.9*sign(phi[1])}
+            rt2 = sqrt(1-phi0^2)
+            a2 = (qnorm(cdf(xt[2]-1,theta1[2,]),0,1) - phi[1]*zprev1)/rt2
+            b2 = (qnorm(cdf(xt[2],theta1[2,]),0,1) - phi[1]*zprev1)/rt2
+            err2 = z.rest(a2,b2)
+            znew2 = phi0*zprev1 + rt2*err2
+            znew = c(znew2,zprev1)
+            zhat2 = sum(phi*znew)
+            prt[,2] = zhat2
+
+            wgh[,2] = wprev*(pnorm(b2,0,1) - pnorm(a2,0,1))
+            wprev = wgh[,2]
+
+            zprev = znew
+
+            for (t in 3:T1)
+            {
+              rt = 1/sqrt( ((1-phi[2])/(1+phi[2])) / ((1-phi[2])^2-phi[1]^2) )
+              a = (qnorm(cdf(xt[t]-1,theta1[t,]),0,1) - sum(phi*zprev))/rt
+              b = (qnorm(cdf(xt[t],theta1[t,]),0,1) - sum(phi*zprev))/rt
+              err = z.rest(a,b)
+              znew = sum(phi*zprev) + rt*err
+              znew = c(znew,zprev[1])
+              zhat = sum(phi*znew)
+              prt[,t] = zhat
+              zprev = znew
+
+              wgh[,t] = wprev*(pnorm(b,0,1) - pnorm(a,0,1))
+              wprev = wgh[,t]
+            }
+
+            lik = pdf(xt[1],theta1[1,])*mean(wgh[,T1])
+            nloglik = (-2)*log(lik)
+
+            out = if (is.na(nloglik)) Inf else nloglik
+            return(out)
+          }else{
+            out = Inf
+            return(out)
+          }
+        }
+      }
+    } else{ stop("the p specified is not valid") }
+  }
+
+
+  if ((gauss.series=="AR") & (estim.method=="particlesSISR")){ # VP change
+    if(is.null(p)) stop("you must specify the AR order, p, to use
+                        gauss.series=AR")
+    if(p>2) stop("the ACVF is not coded for AR models of order higher than 1
+                 currently")
+    if(p==1){
+      #set.seed(1)
+      z.rest = function(a,b){
+        # Generates N(0,1) variables restricted to (ai,bi),i=1,...n
+        qnorm(runif(length(a),0,1)*(pnorm(b,0,1)-pnorm(a,0,1))+pnorm(a,0,1),0,1)
+      }
+      likSISR = function(theta, data){
         #set.seed(1)
         theta1 = theta[theta1.idx]
         n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
         theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 1)
-                phi = theta[theta2.idx]
+        phi = theta[theta2.idx]
         xt = data
         T1 = length(xt)
         N = 1000 # number of particles
@@ -319,9 +584,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
         zhat = phi*zprev
         prt[,1] = zhat
 
-        wprev = rep(1,N)
-        wgh[,1] = wprev
-
+        nloglik <- 0
         for (t in 2:T1)
         {
           rt = sqrt(1-phi^2)
@@ -329,16 +592,32 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
           b = (qnorm(cdf(xt[t],theta1),0,1) - phi*zprev)/rt
           err = z.rest(a,b)
           znew = phi*zprev + rt*err
-          zhat = phi*znew
-          prt[,t] = zhat
-          zprev = znew
+          wgh <- pnorm(b,0,1) - pnorm(a,0,1)
+          if (any(is.na(wgh))) # see apf code below for explanation
+          {
+            #nloglik <- NaN
+            nloglik <- Inf
+            break
+          }
+          if (sum(wgh)==0)
+          {
+            #nloglik <- NaN
+            nloglik <- Inf
+            break
+          }
+          wghn <- wgh/sum(wgh)
+          ind <- rmultinom(1, N, wghn)
+          znew <- rep(znew,ind)
 
-          wgh[,t] = wprev*(pnorm(b,0,1) - pnorm(a,0,1))
-          wprev = wgh[,t]
+          zhat <- phi*znew
+          prt[,t] <- zhat
+          zprev <- znew
+
+          nloglik <- nloglik -2*log(mean(wgh))
         }
 
-        lik = pdf(xt[1],theta1)*mean(wgh[,T1])
-        nloglik = (-2)*log(lik)
+        nloglik <- nloglik - 2*log(pdf(xt[1],theta1))
+
 
         out = if (is.na(nloglik)) Inf else nloglik
         return(out)
@@ -349,7 +628,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
         # Generates N(0,1) variables restricted to (ai,bi),i=1,...n
         qnorm(runif(length(a),0,1)*(pnorm(b,0,1)-pnorm(a,0,1))+pnorm(a,0,1),0,1)
       }
-      likSIS = function(theta, data){
+      likSISR = function(theta, data){
         # set.seed(1)
         theta1 = theta[theta1.idx]
         n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
@@ -359,7 +638,7 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
         if ( (phi[2]+phi[1]<1) & (phi[2]-phi[1]<1) & (abs(phi[2])<1)){
           xt = data
           T1 = length(xt)
-          N = 1000 # number of particles
+          N = 2000 # number of particles
           prt = matrix(0,N,T1) # to collect all particles
           wgh = matrix(0,N,T1) # to collect all particle weights
 
@@ -417,6 +696,8 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
       }
     } else{ stop("the p specified is not valid") }
   }
+
+
 
   if ((gauss.series=="FARIMA") & (estim.method=="particlesSIS")){
     #set.seed(1)
@@ -477,20 +758,760 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
     }
   }
 
+  if ((gauss.series=="MA") & (estim.method=="particlesSIS")){ # VP change
+    if(q==1){
+      #set.seed(1)
+      z.rest = function(a,b){
+        # Generates N(0,1) variables restricted to (ai,bi),i=1,...n
+        qnorm(runif(length(a),0,1)*(pnorm(b,0,1)-pnorm(a,0,1))+pnorm(a,0,1),0,1)
+      }
+      if (is.vector(x)){
+        likSIS = function(theta, data){
+          #set.seed(1)
+          theta1 = theta[theta1.idx]
+          n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
+          theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 1)
+          tht = theta[theta2.idx]
+          xt = data
+          T1 = length(xt)
+          N = 1000 # number of particles
+          prt = matrix(0,N,T1) # to collect all particles
+          wgh = matrix(0,N,T1) # to collect all particle weights
+
+          a = qnorm(cdf(xt[1]-1,theta1),0,1)
+          b = qnorm(cdf(xt[1],theta1),0,1)
+          a = rep(a,N)
+          b = rep(b,N)
+          zprev = z.rest(a,b)
+          rt0 = 1+tht^2
+          zhat = tht*zprev/rt0
+          prt[,1] = zhat
+
+          wprev = rep(1,N)
+          wgh[,1] = wprev
+
+          for (t in 2:T1)
+          {
+            rt0 = 1+tht^2-tht^2/rt0 # This is based on p. 173 in BD book
+            rt = sqrt(rt0/(1+tht^2))
+            a = (qnorm(cdf(xt[t]-1,theta1),0,1) - zhat)/rt
+            b = (qnorm(cdf(xt[t],theta1),0,1) - zhat)/rt
+            err = z.rest(a,b)
+            znew = zhat + rt*err
+            zhat = tht*(znew-zhat)/rt0
+            prt[,t] = zhat
+
+            wgh[,t] = wprev*(pnorm(b,0,1) - pnorm(a,0,1))
+            wprev = wgh[,t]
+          }
+
+          lik = pdf(xt[1],theta1)*mean(wgh[,T1])
+          nloglik = (-2)*log(lik)
+
+          out = if (is.na(nloglik)) Inf else nloglik
+          return(out)
+        }
+      }else{
+        likSIS = function(theta, data){
+          #set.seed(1)
+          theta1 = theta[theta1.idx]
+          n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
+          theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 1)
+          tht = theta[theta2.idx]
+
+          xt = data[,1]
+          cvt = data[,-1]
+          cvt = cbind(rep(1,length(xt)),cvt)
+          T1 = length(xt)
+          dd = dim(cvt)[2]
+          theta10 = theta1[1:dd]
+          theta10 = exp(rowSums(matrix(rep(theta10,each=T1),ncol=dd)*cvt))
+          theta1 = cbind(theta10,rep(theta1[dd+1],T1))
+
+
+          N = 1000 # number of particles
+          prt = matrix(0,N,T1) # to collect all particles
+          wgh = matrix(0,N,T1) # to collect all particle weights
+
+          a = qnorm(cdf(xt[1]-1,theta1[1,]),0,1)
+          b = qnorm(cdf(xt[1],theta1[1,]),0,1)
+          a = rep(a,N)
+          b = rep(b,N)
+          zprev = z.rest(a,b)
+          rt0 = 1+tht^2
+          zhat = tht*zprev/rt0
+          prt[,1] = zhat
+
+          wprev = rep(1,N)
+          wgh[,1] = wprev
+
+          for (t in 2:T1)
+          {
+            rt0 = 1+tht^2-tht^2/rt0 # This is based on p. 173 in BD book
+            rt = sqrt(rt0/(1+tht^2))
+            a = (qnorm(cdf(xt[t]-1,theta1[t,]),0,1) - zhat)/rt
+            b = (qnorm(cdf(xt[t],theta1[t,]),0,1) - zhat)/rt
+            err = z.rest(a,b)
+            znew = zhat + rt*err
+            zhat = tht*(znew-zhat)/rt0
+            prt[,t] = zhat
+
+            wgh[,t] = wprev*(pnorm(b,0,1) - pnorm(a,0,1))
+            wprev = wgh[,t]
+          }
+
+          lik = pdf(xt[1],theta1[1,])*mean(wgh[,T1])
+          nloglik = (-2)*log(lik)
+
+          out = if (is.na(nloglik)) Inf else nloglik
+          return(out)
+        }
+      }
+    }else if(q==2){ # VP addition
+      z.rest = function(a,b){
+        # Generates N(0,1) variables restricted to (ai,bi),i=1,...n
+        qnorm(runif(length(a),0,1)*(pnorm(b,0,1)-pnorm(a,0,1))+pnorm(a,0,1),0,1)
+      }
+      if (is.vector(x)){
+        likSIS = function(theta, data){
+          #set.seed(1)
+          theta1 = theta[theta1.idx]
+          n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
+          theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 2)
+          tht = theta[theta2.idx]
+
+          if ( (tht[1]+tht[2]>-1) & (tht[2]-tht[1]>-1) & (abs(tht[2])<1) ){
+            xt = data
+            T1 = length(xt)
+            N = 1000 # number of particles
+            prt = matrix(0,N,T1) # to collect all particles
+            wgh = matrix(0,N,T1) # to collect all particle weights
+
+            gam1 = tht[1]*(1+tht[2])/(1+tht[1]^2+tht[2]^2)
+            gam2 = tht[2]/(1+tht[1]^2+tht[2]^2)
+
+
+            a = qnorm(cdf(xt[1]-1,theta1),0,1)
+            b = qnorm(cdf(xt[1],theta1),0,1)
+            a = rep(a,N)
+            b = rep(b,N)
+            zprev1 = z.rest(a,b)
+            tht11 = gam1
+            zhat1 = tht11*zprev1
+            prt[,1] = zhat1
+
+            rt1 = ( 1 - tht11^2 )^(1/2)
+            wprev = rep(1,N)
+            wgh[,1] = wprev
+
+
+            a2 = (qnorm(cdf(xt[2]-1,theta1),0,1) - zhat1)/rt1
+            b2 = (qnorm(cdf(xt[2],theta1),0,1) - zhat1)/rt1
+            err2 = z.rest(a2,b2)
+            znew2 = zhat1 + rt1*err2
+            znew_all = cbind(znew2,zprev1)
+
+            tht22 = gam2
+            tht21 = (gam1 - tht11*tht22)/rt1^2
+            tht_all = cbind(rep(tht21,N),rep(tht22,N))
+            zhat_all = cbind(zhat1,rep(0,N))
+            zhat2 = rowSums(tht_all*(znew_all-zhat_all))
+            prt[,2] = zhat2
+
+            rt2 = (1 - tht21^2*rt1^2 - tht22^2)^(1/2)
+
+            wgh[,2] = wprev*(pnorm(b2,0,1) - pnorm(a2,0,1))
+            wprev = wgh[,2]
+
+            rt_all = c(rt2,rt1)
+            zhat_all = cbind(zhat2,zhat1)
+
+            for (t in 3:T1)
+            {
+
+              a = (qnorm(cdf(xt[t]-1,theta1),0,1) - zhat_all[,1])/rt_all[1]
+              b = (qnorm(cdf(xt[t],theta1),0,1) - zhat_all[,1])/rt_all[1]
+              err = z.rest(a,b)
+              znew = zhat_all[,1] + rt_all[1]*err
+              znew_all = cbind(znew,znew_all[,1])
+
+              thtt2 = gam2/rt_all[2]^2
+              thtt1 = (gam1 - tht_all[1]*thtt2*rt_all[2]^2)/rt_all[1]^2
+              tht_all = cbind(rep(thtt1,N),rep(thtt2,N))
+              zhat2 = rowSums(tht_all*(znew_all-zhat_all))
+              prt[,t] = zhat2
+
+              rt = (1 - thtt1^2*rt_all[1]^2 - thtt2^2*rt_all[2]^2)^(1/2)
+
+              wgh[,t] = wprev*(pnorm(b,0,1) - pnorm(a,0,1))
+              wprev = wgh[,t]
+
+              rt_all = c(rt,rt_all[1])
+              zhat_all = cbind(zhat2,zhat_all[,1])
+
+            }
+
+            lik = pdf(xt[1],theta1)*mean(wgh[,T1])
+            nloglik = (-2)*log(lik)
+            out = if (is.na(nloglik)) Inf else nloglik
+            return(out)
+
+          }else{
+            out = Inf
+            return(out)
+          }
+        }
+      }else{
+        likSIS = function(theta, data){
+          #set.seed(1)
+          theta1 = theta[theta1.idx]
+          n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
+          theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 2)
+          tht = theta[theta2.idx]
+
+          xt = data[,1]
+          cvt = data[,-1]
+          cvt = cbind(rep(1,length(xt)),cvt)
+          T1 = length(xt)
+          dd = dim(cvt)[2]
+          theta10 = theta1[1:dd]
+          theta10 = exp(rowSums(matrix(rep(theta10,each=T1),ncol=dd)*cvt))
+          theta1 = cbind(theta10,rep(theta1[dd+1],T1))
+
+          if ( (tht[1]+tht[2]>-1) & (tht[2]-tht[1]>-1) & (abs(tht[2])<1) ){
+            N = 1000 # number of particles
+            prt = matrix(0,N,T1) # to collect all particles
+            wgh = matrix(0,N,T1) # to collect all particle weights
+
+            gam1 = tht[1]*(1+tht[2])/(1+tht[1]^2+tht[2]^2)
+            gam2 = tht[2]/(1+tht[1]^2+tht[2]^2)
+
+            a = qnorm(cdf(xt[1]-1,theta1[1,]),0,1)
+            b = qnorm(cdf(xt[1],theta1[1,]),0,1)
+            a = rep(a,N)
+            b = rep(b,N)
+            zprev1 = z.rest(a,b)
+            tht11 = gam1
+            zhat1 = tht11*zprev1
+            prt[,1] = zhat1
+
+            rt1 = ( 1 - tht11^2 )^(1/2)
+            wprev = rep(1,N)
+            wgh[,1] = wprev
+
+
+            a2 = (qnorm(cdf(xt[2]-1,theta1[2,]),0,1) - zhat1)/rt1
+            b2 = (qnorm(cdf(xt[2],theta1[2,]),0,1) - zhat1)/rt1
+            err2 = z.rest(a2,b2)
+            znew2 = zhat1 + rt1*err2
+            znew_all = cbind(znew2,zprev1)
+
+            tht22 = gam2
+            tht21 = (gam1 - tht11*tht22)/rt1^2
+            tht_all = cbind(rep(tht21,N),rep(tht22,N))
+            zhat_all = cbind(zhat1,rep(0,N))
+            zhat2 = rowSums(tht_all*(znew_all-zhat_all))
+            prt[,2] = zhat2
+
+            rt2 = (1 - tht21^2*rt1^2 - tht22^2)^(1/2)
+
+            wgh[,2] = wprev*(pnorm(b2,0,1) - pnorm(a2,0,1))
+            wprev = wgh[,2]
+
+            rt_all = c(rt2,rt1)
+            zhat_all = cbind(zhat2,zhat1)
+
+            for (t in 3:T1)
+            {
+
+              a = (qnorm(cdf(xt[t]-1,theta1[t,]),0,1) - zhat_all[,1])/rt_all[1]
+              b = (qnorm(cdf(xt[t],theta1[t,]),0,1) - zhat_all[,1])/rt_all[1]
+              err = z.rest(a,b)
+              znew = zhat_all[,1] + rt_all[1]*err
+              znew_all = cbind(znew,znew_all[,1])
+
+              thtt2 = gam2/rt_all[2]^2
+              thtt1 = (gam1 - tht_all[1]*thtt2*rt_all[2]^2)/rt_all[1]^2
+              tht_all = cbind(rep(thtt1,N),rep(thtt2,N))
+              zhat2 = rowSums(tht_all*(znew_all-zhat_all))
+              prt[,t] = zhat2
+
+              rt = (1 - thtt1^2*rt_all[1]^2 - thtt2^2*rt_all[2]^2)^(1/2)
+
+              wgh[,t] = wprev*(pnorm(b,0,1) - pnorm(a,0,1))
+              wprev = wgh[,t]
+
+              rt_all = c(rt,rt_all[1])
+              zhat_all = cbind(zhat2,zhat_all[,1])
+
+            }
+
+            lik = pdf(xt[1],theta1[1,])*mean(wgh[,T1])
+            nloglik = (-2)*log(lik)
+            out = if (is.na(nloglik)) Inf else nloglik
+            return(out)
+
+          }else{
+            out = Inf
+            return(out)
+          }
+        }
+      }
+
+
+
+    }
+  }
+
+
+  if ((gauss.series=="MA") & (estim.method=="particlesSISR")){ # VP change
+    if(q==1){
+      #set.seed(1)
+      z.rest = function(a,b){
+        # Generates N(0,1) variables restricted to (ai,bi),i=1,...n
+        qnorm(runif(length(a),0,1)*(pnorm(b,0,1)-pnorm(a,0,1))+pnorm(a,0,1),0,1)
+      }
+      likSISR = function(theta, data){
+        #set.seed(1)
+        theta1 = theta[theta1.idx]
+        n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
+        theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 1)
+        tht = theta[theta2.idx]
+        xt = data
+        T1 = length(xt)
+        N = 1000 # number of particles
+        prt = matrix(0,N,T1) # to collect all particles
+        wgh = matrix(0,N,T1) # to collect all particle weights
+
+        a = qnorm(cdf(xt[1]-1,theta1),0,1)
+        b = qnorm(cdf(xt[1],theta1),0,1)
+        a = rep(a,N)
+        b = rep(b,N)
+        zprev = z.rest(a,b)
+        rt0 = 1+tht^2
+        zhat = tht*zprev/rt0
+        prt[,1] = zhat
+
+
+        nloglik <- 0
+        for (t in 2:T1)
+        {
+          rt0 = 1+tht^2-tht^2/rt0 # This is based on p. 173 in BD book
+          rt = sqrt(rt0/(1+tht^2))
+          a = (qnorm(cdf(xt[t]-1,theta1),0,1) - zhat)/rt
+          b = (qnorm(cdf(xt[t],theta1),0,1) - zhat)/rt
+          err = z.rest(a,b)
+          znew = zhat + rt*err
+          wgh <- pnorm(b,0,1) - pnorm(a,0,1)
+          if (any(is.na(wgh))) # see apf code below for explanation
+          {
+            #nloglik <- NaN
+            nloglik <- Inf
+            break
+          }
+          if (sum(wgh)==0)
+          {
+            #nloglik <- NaN
+            nloglik <- Inf
+            break
+          }
+          wghn <- wgh/sum(wgh)
+          ind <- rmultinom(1, N, wghn)
+          znew <- rep(znew,ind)
+
+          zhat = tht*(znew-zhat)/rt0
+          prt[,t] = zhat
+
+          nloglik <- nloglik -2*log(mean(wgh))
+        }
+
+        nloglik <- nloglik - 2*log(pdf(xt[1],theta1))
+
+
+        out = if (is.na(nloglik)) Inf else nloglik
+        return(out)
+      }
+    }else if(q==2){ # VP addition
+      z.rest = function(a,b){
+        # Generates N(0,1) variables restricted to (ai,bi),i=1,...n
+        qnorm(runif(length(a),0,1)*(pnorm(b,0,1)-pnorm(a,0,1))+pnorm(a,0,1),0,1)
+      }
+      if (is.vector(x)){
+        likSISR = function(theta, data){
+          #set.seed(1)
+          theta1 = theta[theta1.idx]
+          n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
+          theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 2)
+          tht = theta[theta2.idx]
+
+          if ( (tht[1]+tht[2]>-1) & (tht[2]-tht[1]>-1) & (abs(tht[2])<1) ){
+            xt = data
+            T1 = length(xt)
+            N = 1000 # number of particles
+            prt = matrix(0,N,T1) # to collect all particles
+            wgh = matrix(0,N,T1) # to collect all particle weights
+
+            gam1 = tht[1]*(1+tht[2])/(1+tht[1]^2+tht[2]^2)
+            gam2 = tht[2]/(1+tht[1]^2+tht[2]^2)
+
+
+            a = qnorm(cdf(xt[1]-1,theta1),0,1)
+            b = qnorm(cdf(xt[1],theta1),0,1)
+            a = rep(a,N)
+            b = rep(b,N)
+            zprev1 = z.rest(a,b)
+            tht11 = gam1
+            zhat1 = tht11*zprev1
+            prt[,1] = zhat1
+
+            rt1 = ( 1 - tht11^2 )^(1/2)
+
+            nloglik = 0
+
+
+            a2 = (qnorm(cdf(xt[2]-1,theta1),0,1) - zhat1)/rt1
+            b2 = (qnorm(cdf(xt[2],theta1),0,1) - zhat1)/rt1
+            err2 = z.rest(a2,b2)
+            znew2 = zhat1 + rt1*err2
+
+            wgh = pnorm(b2,0,1) - pnorm(a2,0,1)
+
+            wghn = wgh/sum(wgh)
+            ind = rmultinom(1, N, wghn)
+            znew2 = rep(znew2,ind)
+
+            znew_all = cbind(znew2,zprev1)
+
+            tht22 = gam2
+            tht21 = (gam1 - tht11*tht22)/rt1^2
+            tht_all = cbind(rep(tht21,N),rep(tht22,N))
+            zhat_all = cbind(zhat1,rep(0,N))
+            zhat2 = rowSums(tht_all*(znew_all-zhat_all))
+            prt[,2] = zhat2
+
+            rt2 = (1 - tht21^2*rt1^2 - tht22^2)^(1/2)
+
+
+
+            rt_all = c(rt2,rt1)
+            zhat_all = cbind(zhat2,zhat1)
+
+            nloglik = nloglik -2*log(mean(wgh))
+
+            for (t in 3:T1)
+            {
+
+              a = (qnorm(cdf(xt[t]-1,theta1),0,1) - zhat_all[,1])/rt_all[1]
+              b = (qnorm(cdf(xt[t],theta1),0,1) - zhat_all[,1])/rt_all[1]
+              err = z.rest(a,b)
+              znew = zhat_all[,1] + rt_all[1]*err
+
+
+              wgh = pnorm(b,0,1) - pnorm(a,0,1)
+              if (any(is.na(wgh)))
+              {
+                #nloglik <- NaN
+                nloglik = Inf
+                break
+              }
+              if (sum(wgh)==0)
+              {
+                #nloglik <- NaN
+                nloglik = Inf
+                break
+              }
+
+              wghn = wgh/sum(wgh)
+              ind = rmultinom(1, N, wghn)
+              znew = rep(znew,ind)
+
+              znew_all = cbind(znew,znew_all[,1])
+
+              thtt2 = gam2/rt_all[2]^2
+              thtt1 = (gam1 - tht_all[1]*thtt2*rt_all[2]^2)/rt_all[1]^2
+              tht_all = cbind(rep(thtt1,N),rep(thtt2,N))
+              zhat2 = rowSums(tht_all*(znew_all-zhat_all))
+              prt[,t] = zhat2
+
+              rt = (1 - thtt1^2*rt_all[1]^2 - thtt2^2*rt_all[2]^2)^(1/2)
+
+              rt_all = c(rt,rt_all[1])
+              zhat_all = cbind(zhat2,zhat_all[,1])
+
+              nloglik = nloglik -2*log(mean(wgh))
+
+            }
+
+            nloglik = nloglik - 2*log(pdf(xt[1],theta1))
+            out = if (is.na(nloglik)) Inf else nloglik
+            return(out)
+
+          }else{
+            out = Inf
+            return(out)
+          }
+        }
+      }else{
+        likSISR = function(theta, data){
+          #set.seed(1)
+          theta1 = theta[theta1.idx]
+          n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
+          theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 2)
+          tht = theta[theta2.idx]
+
+
+          xt = data[,1]
+          cvt = data[,-1]
+          cvt = cbind(rep(1,length(xt)),cvt)
+          T1 = length(xt)
+          dd = dim(cvt)[2]
+          theta10 = theta1[1:dd]
+          theta10 = exp(rowSums(matrix(rep(theta10,each=T1),ncol=dd)*cvt))
+          theta1 = cbind(theta10,rep(theta1[dd+1],T1))
+
+
+          if ( (tht[1]+tht[2]>-1) & (tht[2]-tht[1]>-1) & (abs(tht[2])<1) ){
+            N = 1000 # number of particles
+            prt = matrix(0,N,T1) # to collect all particles
+            wgh = matrix(0,N,T1) # to collect all particle weights
+
+            gam1 = tht[1]*(1+tht[2])/(1+tht[1]^2+tht[2]^2)
+            gam2 = tht[2]/(1+tht[1]^2+tht[2]^2)
+
+
+            a = qnorm(cdf(xt[1]-1,theta1[1,]),0,1)
+            b = qnorm(cdf(xt[1],theta1[1,]),0,1)
+            zprev1 = z.rest(a,b)
+            tht11 = gam1
+            zhat1 = tht11*zprev1
+            prt[,1] = zhat1
+
+            rt1 = ( 1 - tht11^2 )^(1/2)
+
+            nloglik = 0
+
+            a2 = (qnorm(cdf(xt[2]-1,theta1[2,]),0,1) - zhat1)/rt1
+            b2 = (qnorm(cdf(xt[2],theta1[2,]),0,1) - zhat1)/rt1
+
+            err2 = z.rest(a2,b2)
+            znew2 = zhat1 + rt1*err2
+
+            wgh = pnorm(b2,0,1) - pnorm(a2,0,1)
+            if (any(is.na(wgh)))
+            {
+              #nloglik <- NaN
+              nloglik = Inf
+            }
+            if (sum(wgh)==0)
+            {
+              #nloglik <- NaN
+              nloglik = Inf
+            }
+
+            wghn = wgh/sum(wgh)
+            ind = rmultinom(1, N, wghn)
+            znew2 = rep(znew2,ind)
+
+            znew_all = cbind(znew2,zprev1)
+
+            tht22 = gam2
+            tht21 = (gam1 - tht11*tht22)/rt1^2
+            tht_all = cbind(rep(tht21,N),rep(tht22,N))
+            zhat_all = cbind(zhat1,rep(0,N))
+            zhat2 = rowSums(tht_all*(znew_all-zhat_all))
+            prt[,2] = zhat2
+
+            rt2 = (1 - tht21^2*rt1^2 - tht22^2)^(1/2)
+
+
+
+            rt_all = c(rt2,rt1)
+            zhat_all = cbind(zhat2,zhat1)
+
+
+            nloglik = nloglik -2*log(mean(wgh))
+
+            for (t in 3:T1)
+            {
+
+              a = (qnorm(cdf(xt[t]-1,theta1[t,]),0,1) - zhat_all[,1])/rt_all[1]
+              b = (qnorm(cdf(xt[t],theta1[t,]),0,1) - zhat_all[,1])/rt_all[1]
+              err = z.rest(a,b)
+              znew = zhat_all[,1] + rt_all[1]*err
+
+              wgh = pnorm(b,0,1) - pnorm(a,0,1)
+              if (any(is.na(wgh)))
+              {
+                #nloglik <- NaN
+                nloglik = Inf
+                break
+              }
+              if (sum(wgh)==0)
+              {
+                #nloglik <- NaN
+                nloglik = Inf
+                break
+              }
+
+              wghn = wgh/sum(wgh)
+              ind = rmultinom(1, N, wghn)
+              znew = rep(znew,ind)
+
+              znew_all = cbind(znew,znew_all[,1])
+
+
+              thtt2 = gam2/rt_all[2]^2
+              thtt1 = (gam1 - tht_all[1]*thtt2*rt_all[2]^2)/rt_all[1]^2
+              tht_all = cbind(rep(thtt1,N),rep(thtt2,N))
+              zhat2 = rowSums(tht_all*(znew_all-zhat_all))
+              prt[,t] = zhat2
+
+              rt = (1 - thtt1^2*rt_all[1]^2 - thtt2^2*rt_all[2]^2)^(1/2)
+
+              rt_all = c(rt,rt_all[1])
+              zhat_all = cbind(zhat2,zhat_all[,1])
+
+              nloglik = nloglik -2*log(mean(wgh))
+
+            }
+
+            nloglik = nloglik - 2*log(pdf(xt[1],theta1))
+            out = if (is.na(nloglik)) Inf else nloglik
+            return(out)
+
+          }else{
+            out = Inf
+            return(out)
+          }
+        }
+      }
+    }
+  }
+
+  if ((gauss.series=="ARMA") & (estim.method=="particlesSIS")){ # VP change
+    if(p==1 & q==1){
+      #set.seed(1)
+      z.rest = function(a,b){
+        # Generates N(0,1) variables restricted to (ai,bi),i=1,...n
+        qnorm(runif(length(a),0,1)*(pnorm(b,0,1)-pnorm(a,0,1))+pnorm(a,0,1),0,1)
+      }
+      if (is.vector(x)){
+        likSIS = function(theta, data){
+          #set.seed(1)
+          theta1 = theta[theta1.idx]
+          n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
+          theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 2)
+          phi = theta[theta2.idx[1]]
+          tht = theta[theta2.idx[2]]
+          xt = data
+          T1 = length(xt)
+          N = 1000 # number of particles
+          prt = matrix(0,N,T1) # to collect all particles
+          wgh = matrix(0,N,T1) # to collect all particle weights
+
+          a = qnorm(cdf(xt[1]-1,theta1),0,1)
+          b = qnorm(cdf(xt[1],theta1),0,1)
+          a = rep(a,N)
+          b = rep(b,N)
+          zprev = z.rest(a,b)
+          rt0 =(1+2*phi*tht+tht^2)/(1-phi^2)
+          zhat = phi*zprev + tht*zprev/rt0
+          prt[,1] = zhat
+
+          wprev = rep(1,N)
+          wgh[,1] = wprev
+
+          for (t in 2:T1)
+          {
+            rt0 = 1+tht^2-tht^2/rt0 # This is based on p. 177 in BD book
+            rt = sqrt(rt0*(1-phi^2)/(1+2*phi*tht+tht^2))
+            a = (qnorm(cdf(xt[t]-1,theta1),0,1) - zhat)/rt
+            b = (qnorm(cdf(xt[t],theta1),0,1) - zhat)/rt
+            err = z.rest(a,b)
+            znew = zhat + rt*err
+            zhat = phi*zhat+tht*(znew-zhat)/rt0
+            prt[,t] = zhat
+
+            wgh[,t] = wprev*(pnorm(b,0,1) - pnorm(a,0,1))
+            wprev = wgh[,t]
+          }
+
+          lik = pdf(xt[1],theta1)*mean(wgh[,T1])
+          nloglik = (-2)*log(lik)
+
+          out = if (is.na(nloglik)) Inf else nloglik
+          return(out)
+        }
+      }else{
+        likSIS = function(theta, data){
+          #set.seed(1)
+          theta1 = theta[theta1.idx]
+          n.theta1.idx = theta1.idx[length(theta1.idx)] # num params in theta1
+          theta2.idx = (n.theta1.idx + 1):(n.theta1.idx + 2)
+          phi = theta[theta2.idx[1]]
+          tht = theta[theta2.idx[2]]
+
+          xt = data[,1]
+          cvt = data[,-1]
+          cvt = cbind(rep(1,length(xt)),cvt)
+          T1 = length(xt)
+          dd = dim(cvt)[2]
+          theta10 = theta1[1:dd]
+          theta10 = exp(rowSums(matrix(rep(theta10,each=T1),ncol=dd)*cvt))
+          theta1 = cbind(theta10,rep(theta1[dd+1],T1))
+
+
+          N = 1000 # number of particles
+          prt = matrix(0,N,T1) # to collect all particles
+          wgh = matrix(0,N,T1) # to collect all particle weights
+
+          a = qnorm(cdf(xt[1]-1,theta1[1,]),0,1)
+          b = qnorm(cdf(xt[1],theta1[1,]),0,1)
+          a = rep(a,N)
+          b = rep(b,N)
+          zprev = z.rest(a,b)
+          rt0 = (1+2*phi*tht+tht^2)/(1-phi^2)
+          zhat = phi*zprev+tht*zprev/rt0
+          prt[,1] = zhat
+
+          wprev = rep(1,N)
+          wgh[,1] = wprev
+
+          for (t in 2:T1)
+          {
+            rt0 = 1+tht^2-tht^2/rt0 # This is based on p. 177 in BD book
+            rt = sqrt(rt0*(1-phi^2)/(1+2*phi*tht+tht^2))
+            a = (qnorm(cdf(xt[t]-1,theta1[t,]),0,1) - zhat)/rt
+            b = (qnorm(cdf(xt[t],theta1[t,]),0,1) - zhat)/rt
+            err = z.rest(a,b)
+            znew = zhat + rt*err
+            zhat = phi*znew + tht*(znew-zhat)/rt0
+            prt[,t] = zhat
+
+            wgh[,t] = wprev*(pnorm(b,0,1) - pnorm(a,0,1))
+            wprev = wgh[,t]
+          }
+
+          lik = pdf(xt[1],theta1[1,])*mean(wgh[,T1])
+          nloglik = (-2)*log(lik)
+
+          out = if (is.na(nloglik)) Inf else nloglik
+          return(out)
+        }
+      }
+    }
+  }
+
+
   # ---- Optimization ---------------------------------------------------------
 
   if(estim.method=="gaussianLik"){
     initial.param = c(count.initial(x), gauss.initial(x))
     if(print.initial.estimates) cat("initial parameter estimates: ", initial.param, "\n")
-    if(max(p,q)>1){ # FIX ME: this if clause works cause I ve set p=NULL when MA and q=NULL when AR
-      optim.output <- optim(par = initial.param, fn = lik,
-                            data=x, hessian=TRUE, method = "BFGS")
-    }else{
-      optim.output <- optim(par = initial.param, fn = lik,
-                            data=x, hessian=TRUE, method = "L-BFGS-B",
-                            lower = c(theta1.min, theta2.min),
-                            upper = c(theta1.max, theta2.max))
-    }
+    optim.output <- optim(par = initial.param, fn = lik,
+                          data=x, hessian=TRUE, method = "L-BFGS-B",
+                          lower = c(theta1.min, theta2.min),
+                          upper = c(theta1.max, theta2.max), ...)
     stder = rep(NA, length(initial.param))
     stder <- sqrt(diag(solve(optim.output$hessian))) # calculate standard error
     stder[is.nan(stder)] = 0
@@ -499,18 +1520,56 @@ LGC <- function(x, count.family = c("Poisson", "mixed-Poisson", "negbinom", "Gen
 
   if((gauss.series=="AR") & (estim.method=="particlesSIS")){
     if(p==1){
-      R0 <- DEoptim::DEoptim(likSIS, lower = c(theta1.min,-.99), upper = c(theta1.max,.99),control = DEoptim::DEoptim.control(trace = 10, itermax = 100, steptol = 50, reltol = 1e-5), data=x)
+      R0 <- DEoptim::DEoptim(likSIS, lower = c(theta1.min,-.99), upper = c(theta1.max,.99),control = DEoptim::DEoptim.control(trace = 10, itermax = 200, steptol = 50, reltol = 1e-5), data=x)
       optim.output <- as.vector(R0$optim$bestmem)
     }
     if(p==2){
-      R0 <- DEoptim::DEoptim(likSIS, lower = c(theta1.min,-1.99,-.99), upper = c(theta1.max,1.99,.99),control = DEoptim::DEoptim.control(trace = 10, itermax = 100, steptol = 50, reltol = 1e-5), data=x)
+      R0 <- DEoptim::DEoptim(likSIS, lower = c(theta1.min,-1.99,-.99), upper = c(theta1.max,1.99,.99),control = DEoptim::DEoptim.control(trace = 10, itermax = 200, steptol = 50, reltol = 1e-5), data=x)
       optim.output <- as.vector(R0$optim$bestmem)
     }
   }
 
+  if((gauss.series=="AR") & (estim.method=="particlesSISR")){ # VP change
+    if(p==1){
+      R0 <- DEoptim::DEoptim(likSISR, lower = c(theta1.min,-.99), upper = c(theta1.max,.99),control = DEoptim::DEoptim.control(trace = 10, itermax = 100, steptol = 50, reltol = 1e-5), data=x)
+      optim.output <- as.vector(c(R0$optim$bestmem,R0$optim$bestval))
+    }
+    if(p==2){
+      R0 <- DEoptim::DEoptim(likSISR, lower = c(theta1.min,-1.99,-.99), upper = c(theta1.max,1.99,.99),control = DEoptim::DEoptim.control(trace = 10, itermax = 100, steptol = 50, reltol = 1e-5), data=x)
+      optim.output <- as.vector(c(R0$optim$bestmem,R0$optim$bestval))
+    }
+  }
+
   if((gauss.series=="FARIMA") & (estim.method=="particlesSIS")){
-      R0 <- DEoptim::DEoptim(likSIS, lower = c(theta1.min,-.49), upper = c(theta1.max,.49),control = DEoptim::DEoptim.control(trace = 10, itermax = 100, steptol = 50, reltol = 1e-5), data=x)
+    R0 <- DEoptim::DEoptim(likSIS, lower = c(theta1.min,-.49), upper = c(theta1.max,.49),control = DEoptim::DEoptim.control(trace = 10, itermax = 100, steptol = 50, reltol = 1e-5), data=x)
+    optim.output <- as.vector(R0$optim$bestmem)
+  }
+
+  if((gauss.series=="MA") & (estim.method=="particlesSIS")){
+    if(q==1){
+      R0 <- DEoptim::DEoptim(likSIS, lower = c(theta1.min,-.99), upper = c(theta1.max,.99),control = DEoptim::DEoptim.control(trace = 10, itermax = 200, steptol = 50, reltol = 1e-5), data=x)
       optim.output <- as.vector(R0$optim$bestmem)
+    }else if(q==2){
+      R0 <- DEoptim::DEoptim(likSIS, lower = c(theta1.min,-1.99,-0.99), upper = c(theta1.max,1.99,0.99),control = DEoptim::DEoptim.control(trace = 10, itermax = 200, steptol = 50, reltol = 1e-5), data=x)
+      optim.output <- as.vector(R0$optim$bestmem)
+    }
+  }
+
+  if((gauss.series=="MA") & (estim.method=="particlesSISR")){ # VP change
+    if(q==1){
+      R0 <- DEoptim::DEoptim(likSISR, lower = c(theta1.min,-.99), upper = c(theta1.max,.99),control = DEoptim::DEoptim.control(trace = 10, itermax = 200, steptol = 50, reltol = 1e-5), data=x)
+      optim.output <- as.vector(R0$optim$bestmem)
+    }else if(q==2){
+      R0 <- DEoptim::DEoptim(likSISR, lower = c(theta1.min,-1.99,-0.99), upper = c(theta1.max,1.99,0.99),control = DEoptim::DEoptim.control(trace = 10, itermax = 200, steptol = 50, reltol = 1e-5), data=x)
+      optim.output <- as.vector(R0$optim$bestmem)
+    }
+  }
+
+  if((gauss.series=="ARMA") & (estim.method=="particlesSIS")){
+    if(p==1 & q==1){
+      R0 <- DEoptim::DEoptim(likSIS, lower = c(theta1.min,-.99,-.99), upper = c(theta1.max,.99,.99),control = DEoptim::DEoptim.control(trace = 10, itermax = 200, steptol = 50, reltol = 1e-5), data=x)
+      optim.output <- as.vector(R0$optim$bestmem)
+    }
   }
 
   return(optim.output)
